@@ -11,8 +11,14 @@ services:
       - key: PORT
         value: 10000
       - key: MONGODB_URI
+        value: placeholder_mongodb_uri
       - key: JWT_SECRET
+        value: placeholder_jwt_secret
       - key: GEMINI_API_KEY
+        value: placeholder_gemini_api_key
       - key: MISTRAL_API_KEY
+        value: placeholder_mistral_api_key
       - key: GOOGLE_TRANSLATE_API_KEY
+        value: placeholder_google_translate_api_key
       - key: FIREBASE_PROJECT_ID
+        value: placeholder_firebase_project_id
