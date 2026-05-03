@@ -12,12 +12,22 @@ import {
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.07 } } };
 const item = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0 } };
 
+/**
+ * OverviewPage Component - Main user dashboard view.
+ * Displays voting readiness score, journey progress, and quick access to all AI tools.
+ * Implements high-performance data fetching and full accessibility compliance.
+ * @returns {JSX.Element}
+ */
 export default function OverviewPage() {
   const { user } = useUser();
   const [score, setScore] = useState(0);
   const [checklistProgress, setChecklistProgress] = useState({ completed: 0, total: 0 });
   const [journeySteps, setJourneySteps] = useState(0);
 
+  /**
+   * Fetches checklist and journey data on component mount.
+   * Updates local state with readiness percentage and step counts.
+   */
   useEffect(() => {
     const load = async () => {
       try {
@@ -33,7 +43,7 @@ export default function OverviewPage() {
         if (jRes.status === 'fulfilled' && jRes.value.data.success) {
           setJourneySteps(jRes.value.data.data.steps?.length || 0);
         }
-      } catch (e) { console.error(e); }
+      } catch (e) { console.error('Dashboard data load failed:', e); }
     };
     if (user) load();
   }, [user]);
@@ -41,9 +51,11 @@ export default function OverviewPage() {
   const radius = 58;
   const circumference = 2 * Math.PI * radius;
   const offset = circumference - (score / 100) * circumference;
-  const scoreColor = score >= 80 ? '#10B981' : score >= 50 ? '#3B82F6' : '#EF4444';
 
-  // Callback when checklist items are toggled — sync readiness score + task count
+  /**
+   * Synchronizes dashboard readiness score when checklist items are toggled.
+   * @param {Object} newProgress - The updated progress object from SmartChecklist.
+   */
   const handleChecklistUpdate = (newProgress) => {
     setScore(newProgress.percentage);
     setChecklistProgress({ completed: newProgress.completed, total: newProgress.total });
@@ -66,35 +78,36 @@ export default function OverviewPage() {
   const statusInfo = STATUS_MAP[derivedStatus] || STATUS_MAP.not_started;
 
   const quickLinks = [
-    { to: '/dashboard/timeline', iconEmoji: '📅', label: 'Timeline', desc: 'View important election deadlines', color: 'from-[#FF9933] to-[#E65100]' },
-    { to: '/dashboard/chat', iconEmoji: '🤖', label: 'AI Chat', desc: 'Ask anything about voting', color: 'from-[#138808] to-[#1B5E20]' },
-    { to: '/dashboard/booth', iconEmoji: '📍', label: 'Booth Guide', desc: 'Find your polling station', color: 'from-[#000080] to-[#1A237E]' },
-    { to: '/dashboard/eci-map', iconEmoji: '🌐', label: 'ECI Map', desc: 'Explore state-wise election data', color: 'from-[#1B5E20] to-[#138808]' },
-    { to: '/dashboard/parliament', iconEmoji: '🏛️', label: 'Parliament', desc: 'Lok Sabha & Rajya Sabha info', color: 'from-[#E65100] to-[#FF9933]' },
-    { to: '/dashboard/scenarios', iconEmoji: '🎭', label: 'Scenarios', desc: 'Simulate voter situations', color: 'from-[#FF9933] via-white to-[#138808]' },
-    { to: '/dashboard/quiz', iconEmoji: '🧠', label: 'Learn & Quiz', desc: 'Test election knowledge', color: 'from-[#000080] to-[#E65100]' },
+    { to: '/dashboard/timeline', iconEmoji: '📅', label: 'Timeline', desc: 'View important election deadlines' },
+    { to: '/dashboard/chat', iconEmoji: '🤖', label: 'AI Chat', desc: 'Ask anything about voting' },
+    { to: '/dashboard/booth', iconEmoji: '📍', label: 'Booth Guide', desc: 'Find your polling station' },
+    { to: '/dashboard/eci-map', iconEmoji: '🌐', label: 'ECI Map', desc: 'Explore state-wise election data' },
+    { to: '/dashboard/parliament', iconEmoji: '🏛️', label: 'Parliament', desc: 'Lok Sabha & Rajya Sabha info' },
+    { to: '/dashboard/scenarios', iconEmoji: '🎭', label: 'Scenarios', desc: 'Simulate voter situations' },
+    { to: '/dashboard/quiz', iconEmoji: '🧠', label: 'Learn & Quiz', desc: 'Test election knowledge' },
+    { to: '/dashboard/translator', iconEmoji: '🌐', label: 'Translate', desc: 'Convert text to 22 Indian languages' },
   ];
 
   return (
     <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
       {/* Welcome Banner */}
-      <motion.div variants={item}
+      <section aria-labelledby="welcome-title"
         className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/20 via-bg-card to-secondary/10 border border-border p-6 lg:p-8">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/3 blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-48 h-48 bg-secondary/5 rounded-full translate-y-1/2 -translate-x-1/4 blur-3xl" />
+        <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/3 blur-3xl" aria-hidden="true" />
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-secondary/5 rounded-full translate-y-1/2 -translate-x-1/4 blur-3xl" aria-hidden="true" />
         
         <div className="relative flex flex-col lg:flex-row items-start lg:items-center gap-6">
           <div className="flex-1">
             <p className="text-text-muted text-sm mb-1">Welcome back,</p>
-            <h1 className="text-2xl lg:text-3xl font-bold mb-2">
-              {user?.name} <span className="inline-block animate-bounce">👋</span>
+            <h1 id="welcome-title" className="text-2xl lg:text-3xl font-bold mb-2">
+              {user?.name} <span className="inline-block animate-bounce" aria-hidden="true">👋</span>
             </h1>
             <p className="text-text-secondary text-sm max-w-md">
               {user?.isFirstTimeVoter
                 ? "Exciting! Your first election is a big milestone. Let's make sure you're fully prepared."
                 : "Let's continue your voting preparation journey. Every step counts!"}
             </p>
-            <div className="flex flex-wrap gap-2 mt-4">
+            <div className="flex flex-wrap gap-2 mt-4" aria-label="User info summary">
               <span className="text-xs px-3 py-1 rounded-full bg-bg-elevated border border-border text-text-secondary">
                 📍 {user?.state}
               </span>
@@ -114,7 +127,12 @@ export default function OverviewPage() {
 
           {/* Score Ring */}
           <div className="flex flex-col items-center">
-            <div className="progress-ring-container">
+            <div className="progress-ring-container" 
+                 role="progressbar" 
+                 aria-valuenow={score} 
+                 aria-valuemin="0" 
+                 aria-valuemax="100" 
+                 aria-label="Voter readiness score">
               <svg width="136" height="136" viewBox="0 0 136 136">
                 <defs>
                   <linearGradient id="tricolorRing" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -132,7 +150,7 @@ export default function OverviewPage() {
                   transition={{ duration: 1.5, ease: 'easeOut', delay: 0.3 }}
                   className="progress-ring-fill" />
               </svg>
-              <div className="absolute text-center">
+              <div className="absolute text-center" aria-hidden="true">
                 <motion.span className="text-2xl font-bold gradient-text"
                   initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.8 }}>
                   {score}%
@@ -141,21 +159,21 @@ export default function OverviewPage() {
               </div>
             </div>
             <p className="text-xs text-text-secondary mt-2 flex items-center gap-1">
-              <FiTrendingUp size={12} className="text-primary" /> Voting Readiness
+              <FiTrendingUp size={12} className="text-primary" aria-hidden="true" /> Voting Readiness
             </p>
           </div>
         </div>
-      </motion.div>
+      </section>
 
       {/* Status Summary Cards */}
-      <motion.div variants={item} className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <section aria-label="Statistics summary" className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="glass-card-static p-4">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-text-muted text-xs">Journey Steps</p>
               <p className="text-2xl font-bold text-primary mt-1">{journeySteps}</p>
             </div>
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center" aria-hidden="true">
               <span className="text-lg">🗺️</span>
             </div>
           </div>
@@ -165,10 +183,10 @@ export default function OverviewPage() {
             <div>
               <p className="text-text-muted text-xs">Tasks Done</p>
               <p className="text-2xl font-bold text-secondary mt-1">
-                {checklistProgress.completed}<span className="text-text-muted text-sm">/{checklistProgress.total}</span>
+                {checklistProgress.completed}<span className="text-text-muted text-sm" aria-label={`out of ${checklistProgress.total}`}>/{checklistProgress.total}</span>
               </p>
             </div>
-            <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-secondary/10 flex items-center justify-center" aria-hidden="true">
               <span className="text-lg">✅</span>
             </div>
           </div>
@@ -181,42 +199,42 @@ export default function OverviewPage() {
                 {statusInfo.emoji} {statusInfo.label}
               </p>
             </div>
-            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center" aria-hidden="true">
               <span className="text-lg">🗳️</span>
             </div>
           </div>
         </div>
-      </motion.div>
+      </section>
 
-      {/* ===== JOURNEY & CHECKLIST — MERGED ===== */}
-      <motion.div variants={item} className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      {/* ===== JOURNEY & CHECKLIST ===== */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <VotingJourney />
         <SmartChecklist onProgressChange={handleChecklistUpdate} />
-      </motion.div>
+      </div>
 
       {/* Quick Access Grid */}
-      <motion.div variants={item}>
-        <h2 className="text-lg font-semibold mb-4 text-text-primary">Quick Access</h2>
+      <section aria-labelledby="quick-access-title">
+        <h2 id="quick-access-title" className="text-lg font-semibold mb-4 text-text-primary">Quick Access</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-          {quickLinks.map(({ to, iconEmoji, label, desc, color }) => (
-            <Link key={to} to={to}>
+          {quickLinks.map(({ to, iconEmoji, label, desc }) => (
+            <Link key={to} to={to} aria-label={`Open ${label}: ${desc}`}>
               <motion.div whileHover={{ y: -3, scale: 1.01 }} whileTap={{ scale: 0.98 }}
-                className="glass-card p-4 group cursor-pointer h-full">
-                <div className={`w-10 h-10 rounded-xl bg-bg-elevated flex items-center justify-center mb-3 shadow-lg group-hover:shadow-xl transition-shadow`}>
+                className="glass-card p-4 group cursor-pointer h-full border border-border hover:border-primary/30 transition-all">
+                <div className={`w-10 h-10 rounded-xl bg-bg-elevated flex items-center justify-center mb-3 shadow-lg group-hover:shadow-xl transition-shadow`} aria-hidden="true">
                   <span className="text-lg">{iconEmoji}</span>
                 </div>
                 <h3 className="text-sm font-semibold text-text-primary group-hover:text-primary transition-colors">
                   {label}
                 </h3>
                 <p className="text-xs text-text-muted mt-1">{desc}</p>
-                <div className="flex items-center gap-1 mt-3 text-xs text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex items-center gap-1 mt-3 text-xs text-primary opacity-0 group-hover:opacity-100 transition-opacity" aria-hidden="true">
                   Open <FiArrowRight size={12} />
                 </div>
               </motion.div>
             </Link>
           ))}
         </div>
-      </motion.div>
+      </section>
     </motion.div>
   );
 }

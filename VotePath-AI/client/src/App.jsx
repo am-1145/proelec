@@ -33,16 +33,35 @@ const ProfilePage = lazy(() => import('./pages/ProfilePage'));
 const TranslatorPage = lazy(() => import('./pages/TranslatorPage'));
 
 // ── Premium Loading Spinner ──
+/**
+ * SkipToContent component for keyboard accessibility.
+ * Allows screen reader and keyboard users to skip the navigation and jump to main content.
+ * @returns {JSX.Element}
+ */
+function SkipToContent() {
+  return (
+    <a
+      href="#main-content"
+      className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-white focus:rounded-lg focus:shadow-xl focus:outline-none focus:ring-2 focus:ring-white"
+    >
+      Skip to main content
+    </a>
+  );
+}
+
+/**
+ * Premium Loading Spinner component used for full-page transitions.
+ * @param {Object} props - Component props.
+ * @param {string} [props.text='Loading'] - Text to display below the spinner.
+ * @returns {JSX.Element}
+ */
 function LoadingScreen({ text = 'Loading' }) {
   return (
     <div className="min-h-screen bg-bg-dark flex items-center justify-center" role="status" aria-live="polite" aria-busy="true">
       <div className="text-center">
         <div className="relative w-14 h-14 mx-auto mb-5" aria-hidden="true">
-          {/* Outer ring */}
           <div className="absolute inset-0 rounded-2xl border-2 border-primary/20 animate-pulse" />
-          {/* Spinning ring */}
           <div className="absolute inset-0 rounded-2xl border-2 border-transparent border-t-primary animate-spin" style={{ animationDuration: '0.8s' }} />
-          {/* Icon */}
           <div className="absolute inset-0 flex items-center justify-center text-xl">
             🗳️
           </div>
@@ -59,10 +78,13 @@ function LoadingScreen({ text = 'Loading' }) {
   );
 }
 
-// ── Route-level fallback (lighter) ──
+/**
+ * Lightweight route-level loading fallback.
+ * @returns {JSX.Element}
+ */
 function PageLoader() {
   return (
-    <div className="flex items-center justify-center h-full min-h-[50vh]">
+    <div className="flex items-center justify-center h-full min-h-[50vh]" role="status" aria-label="Loading page content">
       <div className="text-center">
         <div className="w-8 h-8 border-2 border-primary/20 border-t-primary rounded-full animate-spin mx-auto mb-3" />
         <p className="text-text-muted text-xs">Loading page</p>
@@ -71,7 +93,13 @@ function PageLoader() {
   );
 }
 
-// Requires auth + completed profile
+/**
+ * Higher-order component for routes requiring authentication and a completed profile.
+ * Redirects to /auth if unauthenticated, or /setup if profile is incomplete.
+ * @param {Object} props - Component props.
+ * @param {React.ReactNode} props.children - Protected component to render.
+ * @returns {JSX.Element}
+ */
 function ProtectedRoute({ children }) {
   const { user, loading } = useUser();
   if (loading) return <LoadingScreen text="Verifying Session" />;
@@ -80,7 +108,12 @@ function ProtectedRoute({ children }) {
   return <Suspense fallback={<PageLoader />}>{children}</Suspense>;
 }
 
-// Requires auth only (for setup page)
+/**
+ * Higher-order component for routes requiring only authentication (e.g., Setup).
+ * @param {Object} props - Component props.
+ * @param {React.ReactNode} props.children - Component to render.
+ * @returns {JSX.Element}
+ */
 function AuthRequired({ children }) {
   const { user, loading } = useUser();
   if (loading) return <LoadingScreen text="Verifying Session" />;
@@ -88,61 +121,71 @@ function AuthRequired({ children }) {
   return <Suspense fallback={<PageLoader />}>{children}</Suspense>;
 }
 
+/**
+ * Central routing configuration for the application.
+ * Handles public, authenticated-only, and protected dashboard routes.
+ * @returns {JSX.Element}
+ */
 function AppRoutes() {
   const { user, loading } = useUser();
 
   if (loading) return <LoadingScreen text="Starting VotePath AI" />;
 
   return (
-    <Routes>
-      {/* Public routes (eagerly loaded) */}
-      <Route path="/" element={
-        user ? (
-          user.profileCompleted ? <Navigate to="/dashboard" replace /> : <Navigate to="/setup" replace />
-        ) : (
-          <LandingPage />
-        )
-      } />
-      <Route path="/auth" element={
-        user ? (
-          user.profileCompleted ? <Navigate to="/dashboard" replace /> : <Navigate to="/setup" replace />
-        ) : (
-          <AuthPage />
-        )
-      } />
+    <main id="main-content" tabIndex="-1" className="outline-none">
+      <Routes>
+        <Route path="/" element={
+          user ? (
+            user.profileCompleted ? <Navigate to="/dashboard" replace /> : <Navigate to="/setup" replace />
+          ) : (
+            <LandingPage />
+          )
+        } />
+        <Route path="/auth" element={
+          user ? (
+            user.profileCompleted ? <Navigate to="/dashboard" replace /> : <Navigate to="/setup" replace />
+          ) : (
+            <AuthPage />
+          )
+        } />
 
-      {/* Requires auth but profile may be incomplete */}
-      <Route path="/setup" element={
-        <AuthRequired>
-          {user?.profileCompleted ? <Navigate to="/dashboard" replace /> : <SetupPage />}
-        </AuthRequired>
-      } />
+        <Route path="/setup" element={
+          <AuthRequired>
+            {user?.profileCompleted ? <Navigate to="/dashboard" replace /> : <SetupPage />}
+          </AuthRequired>
+        } />
 
-      {/* Protected dashboard routes (lazy loaded) */}
-      <Route path="/dashboard" element={
-        <ProtectedRoute><DashboardLayout /></ProtectedRoute>
-      }>
-        <Route index element={<Suspense fallback={<PageLoader />}><OverviewPage /></Suspense>} />
-        <Route path="timeline" element={<Suspense fallback={<PageLoader />}><TimelinePage /></Suspense>} />
-        <Route path="chat" element={<Suspense fallback={<PageLoader />}><ChatPage /></Suspense>} />
-        <Route path="booth" element={<Suspense fallback={<PageLoader />}><BoothPage /></Suspense>} />
-        <Route path="eci-map" element={<Suspense fallback={<PageLoader />}><ECIMapPage /></Suspense>} />
-        <Route path="parliament" element={<Suspense fallback={<PageLoader />}><ParliamentPage /></Suspense>} />
-        <Route path="scenarios" element={<Suspense fallback={<PageLoader />}><ScenarioPage /></Suspense>} />
-        <Route path="quiz" element={<Suspense fallback={<PageLoader />}><QuizPage /></Suspense>} />
-        <Route path="translator" element={<Suspense fallback={<PageLoader />}><TranslatorPage /></Suspense>} />
-        <Route path="profile" element={<Suspense fallback={<PageLoader />}><ProfilePage /></Suspense>} />
-      </Route>
+        <Route path="/dashboard" element={
+          <ProtectedRoute><DashboardLayout /></ProtectedRoute>
+        }>
+          <Route index element={<Suspense fallback={<PageLoader />}><OverviewPage /></Suspense>} />
+          <Route path="timeline" element={<Suspense fallback={<PageLoader />}><TimelinePage /></Suspense>} />
+          <Route path="chat" element={<Suspense fallback={<PageLoader />}><ChatPage /></Suspense>} />
+          <Route path="booth" element={<Suspense fallback={<PageLoader />}><BoothPage /></Suspense>} />
+          <Route path="eci-map" element={<Suspense fallback={<PageLoader />}><ECIMapPage /></Suspense>} />
+          <Route path="parliament" element={<Suspense fallback={<PageLoader />}><ParliamentPage /></Suspense>} />
+          <Route path="scenarios" element={<Suspense fallback={<PageLoader />}><ScenarioPage /></Suspense>} />
+          <Route path="quiz" element={<Suspense fallback={<PageLoader />}><QuizPage /></Suspense>} />
+          <Route path="translator" element={<Suspense fallback={<PageLoader />}><TranslatorPage /></Suspense>} />
+          <Route path="profile" element={<Suspense fallback={<PageLoader />}><ProfilePage /></Suspense>} />
+        </Route>
 
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </main>
   );
 }
 
+/**
+ * Root Application component.
+ * Configures the user context provider, router, and global toast notifications.
+ * @returns {JSX.Element}
+ */
 function App() {
   return (
     <UserProvider>
       <Router>
+        <SkipToContent />
         <AppRoutes />
         <Toaster
           position="top-right"

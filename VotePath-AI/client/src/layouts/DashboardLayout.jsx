@@ -31,6 +31,12 @@ const sidebarItem = {
   exit: { opacity: 0, x: -24 },
 };
 
+/**
+ * DashboardLayout Component - Main shell for authenticated user routes.
+ * Implements a responsive layout with a top navigation bar and a mobile-specific sidebar.
+ * Features include theme toggling, AI status monitoring, and accessibility-compliant navigation.
+ * @returns {JSX.Element}
+ */
 export default function DashboardLayout() {
   const { user, aiStatus, logoutUser } = useUser();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -60,18 +66,27 @@ export default function DashboardLayout() {
     return () => { document.body.style.overflow = ''; };
   }, [mobileMenuOpen]);
 
+  /** Toggles the application theme between light and dark mode. */
   const toggleTheme = () => setIsDarkMode(!isDarkMode);
 
+  /** Handles user logout and redirects to authentication page. */
   const handleLogout = () => {
     logoutUser();
     navigate('/auth');
   };
 
+  /**
+   * UserAvatar Sub-component - Displays user avatar or initial.
+   * @param {Object} props - Component props.
+   * @param {string} [props.size='w-8 h-8'] - Tailwind size classes.
+   * @param {string} [props.textSize='text-xs'] - Tailwind text size classes.
+   * @returns {JSX.Element}
+   */
   const UserAvatar = ({ size = 'w-8 h-8', textSize = 'text-xs' }) => (
     user?.avatar ? (
-      <img src={user.avatar} alt="" className={`${size} rounded-full object-cover shadow-sm`} referrerPolicy="no-referrer" />
+      <img src={user.avatar} alt={`Avatar of ${user.name}`} className={`${size} rounded-full object-cover shadow-sm`} referrerPolicy="no-referrer" />
     ) : (
-      <div className={`${size} rounded-full bg-bg-elevated border border-border flex items-center justify-center ${textSize} font-bold text-primary shadow-sm`}>
+      <div className={`${size} rounded-full bg-bg-elevated border border-border flex items-center justify-center ${textSize} font-bold text-primary shadow-sm`} aria-hidden="true">
         {user?.name?.charAt(0)?.toUpperCase()}
       </div>
     )
@@ -82,12 +97,12 @@ export default function DashboardLayout() {
       <Background3D isDarkMode={isDarkMode} />
 
       {/* ====== TOP HORIZONTAL NAVBAR ====== */}
-      <header className="sticky top-0 z-40 bg-bg-card/80 backdrop-blur-xl border-b border-border shadow-sm px-4 lg:px-6 flex-shrink-0 transition-colors duration-500">
+      <header role="banner" className="sticky top-0 z-40 bg-bg-card/80 backdrop-blur-xl border-b border-border shadow-sm px-4 lg:px-6 flex-shrink-0 transition-colors duration-500">
         <div className="flex items-center justify-between h-16">
           
           {/* Left: Logo */}
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-bg-elevated flex items-center justify-center text-lg shadow-md shadow-primary/20">
+            <div className="w-9 h-9 rounded-xl bg-bg-elevated flex items-center justify-center text-lg shadow-md shadow-primary/20" aria-hidden="true">
               🗳️
             </div>
             <div className="hidden sm:block">
@@ -97,7 +112,7 @@ export default function DashboardLayout() {
           </div>
 
           {/* Center: Desktop Navigation Links */}
-          <nav className="hidden lg:flex flex-1 justify-center items-center px-8 space-x-1">
+          <nav role="navigation" aria-label="Main navigation" className="hidden lg:flex flex-1 justify-center items-center px-8 space-x-1">
             {NAV_ITEMS.map(({ path, iconEmoji, label, end }) => (
               <NavLink key={path} to={path} end={end}
                 className={({ isActive }) =>
@@ -109,7 +124,7 @@ export default function DashboardLayout() {
                 }>
                 {({ isActive }) => (
                   <>
-                    <span className="text-lg">{iconEmoji}</span>
+                    <span className="text-lg" aria-hidden="true">{iconEmoji}</span>
                     <span className={isActive ? 'text-text-primary font-semibold' : ''}>{label}</span>
                     {isActive && (
                       <motion.div layoutId="topNavIndicator"
@@ -124,21 +139,27 @@ export default function DashboardLayout() {
 
           {/* Right: Theme Toggle, User Profile & Hamburger */}
           <div className="flex items-center gap-2">
-            <button onClick={toggleTheme} className="p-2 rounded-lg text-text-muted hover:bg-bg-elevated hover:text-accent transition-colors" title="Toggle Theme">
-              {isDarkMode ? <FiSun size={18} /> : <FiMoon size={18} />}
+            <button 
+              onClick={toggleTheme} 
+              className="p-2 rounded-lg text-text-muted hover:bg-bg-elevated hover:text-accent transition-colors" 
+              aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+              title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {isDarkMode ? <FiSun size={18} aria-hidden="true" /> : <FiMoon size={18} aria-hidden="true" />}
             </button>
             <div className="hidden md:flex items-center gap-3 pl-2 border-l border-border ml-1">
               <div className="text-right">
                 <p className="text-sm font-semibold text-text-primary leading-none">{user?.name}</p>
                 <p className="text-[10px] text-text-muted mt-1">{user?.state}</p>
               </div>
-              <NavLink to="/dashboard/profile" className="hover:opacity-80 transition-opacity" title="My Profile">
+              <NavLink to="/dashboard/profile" className="hover:opacity-80 transition-opacity" aria-label="View profile">
                 <UserAvatar />
               </NavLink>
               <button onClick={handleLogout}
                 className="p-2 rounded-lg text-text-muted hover:text-accent hover:bg-accent/10 transition-colors"
-                title="Logout">
-                <FiLogOut size={16} />
+                aria-label="Log out"
+                title="Log out">
+                <FiLogOut size={16} aria-hidden="true" />
               </button>
             </div>
 
@@ -146,15 +167,17 @@ export default function DashboardLayout() {
             <motion.button
               onClick={() => setMobileMenuOpen(true)}
               whileTap={{ scale: 0.8 }}
+              aria-label="Open mobile menu"
+              aria-expanded={mobileMenuOpen}
               className="lg:hidden p-2 rounded-lg text-text-secondary hover:bg-bg-elevated hover:text-text-primary transition-colors">
-              <FiMenu size={22} />
+              <FiMenu size={22} aria-hidden="true" />
             </motion.button>
           </div>
         </div>
       </header>
 
       {/* ====== MAIN CONTENT ====== */}
-      <main className="flex-1 overflow-y-auto w-full relative">
+      <main id="main-content" className="flex-1 overflow-y-auto w-full relative outline-none" tabIndex="-1">
         <div className="p-4 lg:p-8 max-w-7xl mx-auto h-full">
           <Outlet />
         </div>
@@ -172,6 +195,7 @@ export default function DashboardLayout() {
               transition={{ duration: 0.2 }}
               className="fixed inset-0 z-50 bg-black/60 backdrop-blur-md lg:hidden"
               onClick={() => setMobileMenuOpen(false)}
+              aria-hidden="true"
             />
 
             {/* Sidebar Panel */}
@@ -180,10 +204,13 @@ export default function DashboardLayout() {
               animate={{ x: 0, opacity: 1 }}
               exit={{ x: -300, opacity: 0 }}
               transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+              role="dialog"
+              aria-modal="true"
+              aria-label="Mobile navigation"
               className="fixed top-0 left-0 z-50 h-full w-[280px] bg-bg-card/95 backdrop-blur-xl border-r border-border/50 flex flex-col lg:hidden shadow-2xl shadow-black/40"
             >
               {/* ── Tricolor strip at top ── */}
-              <div className="h-1 w-full bg-gradient-to-r from-[#FF9933] via-white to-[#138808] flex-shrink-0" />
+              <div className="h-1 w-full bg-gradient-to-r from-[#FF9933] via-white to-[#138808] flex-shrink-0" aria-hidden="true" />
 
               {/* ── Header with close button ── */}
               <div className="px-5 py-4 flex items-center justify-between">
@@ -192,7 +219,7 @@ export default function DashboardLayout() {
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.08, type: 'spring', stiffness: 300, damping: 20 }}
                   className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-bg-elevated flex items-center justify-center text-lg shadow-md">
+                  <div className="w-10 h-10 rounded-xl bg-bg-elevated flex items-center justify-center text-lg shadow-md" aria-hidden="true">
                     🗳️
                   </div>
                   <div>
@@ -205,8 +232,9 @@ export default function DashboardLayout() {
                   onClick={() => setMobileMenuOpen(false)}
                   whileTap={{ scale: 0.8, rotate: 90 }}
                   whileHover={{ rotate: 90 }}
+                  aria-label="Close mobile menu"
                   className="p-2 rounded-xl text-text-muted hover:bg-bg-elevated hover:text-primary transition-colors">
-                  <FiX size={20} />
+                  <FiX size={20} aria-hidden="true" />
                 </motion.button>
               </div>
 
@@ -216,80 +244,83 @@ export default function DashboardLayout() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1, type: 'spring', stiffness: 280, damping: 22 }}>
                 <NavLink to="/dashboard/profile" onClick={() => setMobileMenuOpen(false)}
+                  aria-label="View my profile"
                   className="mx-4 mb-2 flex items-center gap-3 p-3.5 rounded-xl bg-bg-elevated/70 border border-border/60 hover:border-primary/30 hover:bg-bg-elevated transition-all group">
                   <UserAvatar size="w-10 h-10" textSize="text-sm" />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold truncate text-text-primary">{user?.name}</p>
                     <p className="text-[10px] text-text-muted truncate">{user?.state} • Age {user?.age}</p>
                   </div>
-                  <FiChevronRight size={14} className="text-text-muted group-hover:text-primary group-hover:translate-x-0.5 transition-all" />
+                  <FiChevronRight size={14} className="text-text-muted group-hover:text-primary group-hover:translate-x-0.5 transition-all" aria-hidden="true" />
                 </NavLink>
               </motion.div>
 
               {/* ── Navigation Links — Staggered entrance ── */}
-              <motion.nav
-                variants={sidebarNav}
-                initial="hidden"
-                animate="show"
-                exit="exit"
-                className="flex-1 py-3 px-4 space-y-0.5 overflow-y-auto">
-                {NAV_ITEMS.map(({ path, iconEmoji, label, end }) => (
-                  <motion.div key={path} variants={sidebarItem}>
-                    <NavLink to={path} end={end}
-                      onClick={() => setMobileMenuOpen(false)}
-                      className={({ isActive }) =>
-                        `flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium transition-all relative overflow-hidden ${
-                          isActive
-                            ? 'bg-primary/10 text-primary font-semibold border border-primary/20'
-                            : 'text-text-secondary hover:bg-bg-elevated hover:text-text-primary border border-transparent'
-                        }`
-                      }>
-                      {({ isActive }) => (
-                        <>
-                          {/* Active indicator bar */}
-                          {isActive && (
-                            <motion.div
-                              layoutId="mobileSidebarIndicator"
-                              className="absolute left-0 top-2 bottom-2 w-[3px] rounded-r-full bg-primary"
-                              transition={{ type: 'spring', stiffness: 400, damping: 25 }}
-                            />
-                          )}
-                          <span className="text-xl">{iconEmoji}</span>
-                          <span className="flex-1">{label}</span>
-                          {isActive && (
-                            <motion.div
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              transition={{ type: 'spring', stiffness: 500, damping: 20 }}
-                              className="w-1.5 h-1.5 rounded-full bg-primary"
-                            />
-                          )}
-                        </>
-                      )}
-                    </NavLink>
-                  </motion.div>
-                ))}
-              </motion.nav>
+              <nav role="navigation" aria-label="Mobile main navigation" className="flex-1 py-3 px-4 space-y-0.5 overflow-y-auto">
+                <motion.div
+                  variants={sidebarNav}
+                  initial="hidden"
+                  animate="show"
+                  exit="exit"
+                  className="space-y-0.5"
+                >
+                  {NAV_ITEMS.map(({ path, iconEmoji, label, end }) => (
+                    <motion.div key={path} variants={sidebarItem}>
+                      <NavLink to={path} end={end}
+                        onClick={() => setMobileMenuOpen(false)}
+                        className={({ isActive }) =>
+                          `flex items-center gap-3 px-3.5 py-3 rounded-xl text-sm font-medium transition-all relative overflow-hidden ${
+                            isActive
+                              ? 'bg-primary/10 text-primary font-semibold border border-primary/20'
+                              : 'text-text-secondary hover:bg-bg-elevated hover:text-text-primary border border-transparent'
+                          }`
+                        }>
+                        {({ isActive }) => (
+                          <>
+                            {/* Active indicator bar */}
+                            {isActive && (
+                              <motion.div
+                                layoutId="mobileSidebarIndicator"
+                                className="absolute left-0 top-2 bottom-2 w-[3px] rounded-r-full bg-primary"
+                                transition={{ type: 'spring', stiffness: 400, damping: 25 }}
+                              />
+                            )}
+                            <span className="text-xl" aria-hidden="true">{iconEmoji}</span>
+                            <span className="flex-1">{label}</span>
+                            {isActive && (
+                              <motion.div
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                transition={{ type: 'spring', stiffness: 500, damping: 20 }}
+                                className="w-1.5 h-1.5 rounded-full bg-primary"
+                                aria-hidden="true"
+                              />
+                            )}
+                          </>
+                        )}
+                      </NavLink>
+                    </motion.div>
+                  ))}
+                </motion.div>
+              </nav>
 
               {/* ── Bottom Actions ── */}
-              <motion.div
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.35 }}
-                className="p-4 border-t border-border/50 bg-bg-elevated/30">
+              <div className="p-4 border-t border-border/50 bg-bg-elevated/30">
                 <div className="flex items-center justify-between gap-3">
                   <button onClick={toggleTheme}
+                    aria-label={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
                     className="flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-sm text-text-secondary hover:bg-bg-elevated hover:text-accent transition-all border border-border">
-                    {isDarkMode ? <FiSun size={15} /> : <FiMoon size={15} />}
+                    {isDarkMode ? <FiSun size={15} aria-hidden="true" /> : <FiMoon size={15} aria-hidden="true" />}
                     <span className="text-xs font-medium">{isDarkMode ? 'Light' : 'Dark'}</span>
                   </button>
                   <button onClick={handleLogout}
+                    aria-label="Logout"
                     className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium text-white bg-primary hover:bg-primary/90 transition-colors shadow-sm shadow-primary/20">
-                    <FiLogOut size={15} />
+                    <FiLogOut size={15} aria-hidden="true" />
                     Logout
                   </button>
                 </div>
-              </motion.div>
+              </div>
             </motion.aside>
           </>
         )}
