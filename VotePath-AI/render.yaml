@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: votepath-ai-backend
+    env: node
+    rootDir: VotePath-AI/server
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: MONGODB_URI
+        fromEnvVar: MONGODB_URI
+      - key: JWT_SECRET
+        fromEnvVar: JWT_SECRET
+      - key: GEMINI_API_KEY
+        fromEnvVar: GEMINI_API_KEY
+      - key: MISTRAL_API_KEY
+        fromEnvVar: MISTRAL_API_KEY
+      - key: GOOGLE_TRANSLATE_API_KEY
+        fromEnvVar: GOOGLE_TRANSLATE_API_KEY
+      - key: FIREBASE_PROJECT_ID
+        fromEnvVar: FIREBASE_PROJECT_ID
