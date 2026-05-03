@@ -30,68 +30,75 @@ const { asyncHandler } = require('../middleware/errorHandler');
  * @returns {{ success: boolean, data: { reply: string, provider: string, sentiment?: Object } }}
  */
 const chat = asyncHandler(async (req, res) => {
-  const { userId, message } = req.body;
+  console.log('chatController.js: chat started');
+  try {
+    const { userId, message } = req.body;
 
-  if (!userId || !message) {
-    return res.status(400).json({ success: false, error: 'userId and message are required.' });
-  }
+    if (!userId || !message) {
+      return res.status(400).json({ success: false, error: 'userId and message are required.' });
+    }
 
-  const user = await User.findById(userId);
-  if (!user) {
-    return res.status(404).json({ success: false, error: 'User not found' });
-  }
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User not found' });
+    }
 
-  // Get or create chat history
-  let chatHistory = await ChatHistory.findOne({ userId });
-  if (!chatHistory) {
-    chatHistory = await ChatHistory.create({ userId, messages: [] });
-  }
+    // Get or create chat history
+    let chatHistory = await ChatHistory.findOne({ userId });
+    if (!chatHistory) {
+      chatHistory = await ChatHistory.create({ userId, messages: [] });
+    }
 
-  // Add user message
-  chatHistory.messages.push({ role: 'user', content: message });
+    // Add user message
+    chatHistory.messages.push({ role: 'user', content: message });
 
-  // ── Google Cloud NLP: Sentiment Analysis (non-blocking) ──────
-  const sentimentPromise = googleNLPService.analyzeSentiment(message);
+    // ── Google Cloud NLP: Sentiment Analysis (non-blocking) ──────
+    const sentimentPromise = googleNLPService.analyzeSentiment(message);
 
-  // Generate AI response with timing (don't cache chat messages)
-  const startTime = Date.now();
-  const { system, prompt } = prompts.chat(message, user, chatHistory.messages);
-  const result = await aiService.generate(prompt, system, false);
-  const responseTimeMs = Date.now() - startTime;
+    // Generate AI response with timing (don't cache chat messages)
+    const startTime = Date.now();
+    const { system, prompt } = prompts.chat(message, user, chatHistory.messages);
+    const result = await aiService.generate(prompt, system, false);
+    const responseTimeMs = Date.now() - startTime;
 
-  // Await sentiment result (already running in parallel)
-  const sentiment = await sentimentPromise;
+    // Await sentiment result (already running in parallel)
+    const sentiment = await sentimentPromise;
 
-  // Add assistant response
-  chatHistory.messages.push({ role: 'assistant', content: result.content });
+    // Add assistant response
+    chatHistory.messages.push({ role: 'assistant', content: result.content });
 
-  // Keep only last 50 messages
-  if (chatHistory.messages.length > 50) {
-    chatHistory.messages = chatHistory.messages.slice(-50);
-  }
+    // Keep only last 50 messages
+    if (chatHistory.messages.length > 50) {
+      chatHistory.messages = chatHistory.messages.slice(-50);
+    }
 
-  await chatHistory.save();
+    await chatHistory.save();
 
-  // Log interaction for analytics (non-blocking)
-  analyticsService.logQuery({
-    userId, query: message, response: result.content,
-    provider: result.provider, endpoint: 'chat',
-    responseTimeMs, cached: result.cached || false,
-    sentiment: sentiment.label,
-  });
+    // Log interaction for analytics (non-blocking)
+    analyticsService.logQuery({
+      userId, query: message, response: result.content,
+      provider: result.provider, endpoint: 'chat',
+      responseTimeMs, cached: result.cached || false,
+      sentiment: sentiment.label,
+    });
 
-  res.json({
-    success: true,
-    data: {
-      reply: result.content,
-      provider: result.provider,
-      sentiment: {
-        label: sentiment.label,
-        score: sentiment.score,
-        provider: sentiment.provider,
+    res.json({
+      success: true,
+      data: {
+        reply: result.content,
+        provider: result.provider,
+        sentiment: {
+          label: sentiment.label,
+          score: sentiment.score,
+          provider: sentiment.provider,
+        },
       },
-    },
-  });
+    });
+    console.log('chatController.js: chat succeeded');
+  } catch (e) {
+    console.error('chatController.js: chat then', e);
+    throw e;
+  }
 });
 
 /**
@@ -102,12 +109,19 @@ const chat = asyncHandler(async (req, res) => {
  * @returns {{ success: boolean, data: Array<{ role: string, content: string }> }}
  */
 const getChatHistory = asyncHandler(async (req, res) => {
-  const chatHistory = await ChatHistory.findOne({ userId: req.params.userId });
-  
-  res.json({
-    success: true,
-    data: chatHistory ? chatHistory.messages : [],
-  });
+  console.log('chatController.js: getChatHistory started');
+  try {
+    const chatHistory = await ChatHistory.findOne({ userId: req.params.userId });
+    
+    res.json({
+      success: true,
+      data: chatHistory ? chatHistory.messages : [],
+    });
+    console.log('chatController.js: getChatHistory succeeded');
+  } catch (e) {
+    console.error('chatController.js: getChatHistory then', e);
+    throw e;
+  }
 });
 
 module.exports = { chat, getChatHistory };

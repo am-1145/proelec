@@ -20,112 +20,142 @@ class GeminiService {
   }
 
   _ensureClients() {
-    if (this.clients.length === 0 && this.apiKeys.length > 0) {
-      this.clients = this.apiKeys.map(key => new GoogleGenAI({ apiKey: key }));
-      console.log(`🔑 Gemini: ${this.apiKeys.length} API key(s) loaded`);
+    console.log('geminiService.js: _ensureClients started');
+    try {
+      if (this.clients.length === 0 && this.apiKeys.length > 0) {
+        this.clients = this.apiKeys.map(key => new GoogleGenAI({ apiKey: key }));
+        console.log(`🔑 geminiService.js: _ensureClients succeeded - ${this.apiKeys.length} API key(s) loaded`);
+      }
+      return this.clients.length > 0;
+    } catch (e) {
+      console.error('geminiService.js: _ensureClients then', e);
+      return false;
     }
-    return this.clients.length > 0;
   }
 
   isAvailable() {
-    return this._ensureClients();
+    console.log('geminiService.js: isAvailable started');
+    try {
+      const avail = this._ensureClients();
+      console.log('geminiService.js: isAvailable succeeded');
+      return avail;
+    } catch (e) {
+      console.error('geminiService.js: isAvailable then', e);
+      return false;
+    }
   }
 
   _getNextAvailableKeyIndex() {
-    const now = Date.now();
+    console.log('geminiService.js: _getNextAvailableKeyIndex started');
+    try {
+      const now = Date.now();
 
-    // Clear expired exhaustion entries (retry after cooldown)
-    for (const [idx, expiry] of this.exhaustedKeys) {
-      if (now >= expiry) {
-        this.exhaustedKeys.delete(idx);
+      // Clear expired exhaustion entries (retry after cooldown)
+      for (const [idx, expiry] of this.exhaustedKeys) {
+        if (now >= expiry) {
+          this.exhaustedKeys.delete(idx);
+        }
       }
-    }
 
-    // Try keys starting from currentKeyIndex
-    for (let i = 0; i < this.clients.length; i++) {
-      const idx = (this.currentKeyIndex + i) % this.clients.length;
-      if (!this.exhaustedKeys.has(idx)) {
-        return idx;
+      // Try keys starting from currentKeyIndex
+      for (let i = 0; i < this.clients.length; i++) {
+        const idx = (this.currentKeyIndex + i) % this.clients.length;
+        if (!this.exhaustedKeys.has(idx)) {
+          console.log('geminiService.js: _getNextAvailableKeyIndex succeeded');
+          return idx;
+        }
       }
-    }
 
-    return -1; // All keys exhausted
+      console.log('geminiService.js: _getNextAvailableKeyIndex - all keys exhausted');
+      return -1; // All keys exhausted
+    } catch (e) {
+      console.error('geminiService.js: _getNextAvailableKeyIndex then', e);
+      return -1;
+    }
   }
 
   async generate(prompt, systemPrompt = '') {
-    if (!this._ensureClients()) {
-      throw new Error('Gemini API key not configured');
-    }
-
-    const fullPrompt = systemPrompt
-      ? `${systemPrompt}\n\nUser Query: ${prompt}`
-      : prompt;
-
-    let lastError = null;
-
-    // Try each available key
-    for (let attempt = 0; attempt < this.clients.length; attempt++) {
-      const keyIndex = this._getNextAvailableKeyIndex();
-
-      if (keyIndex === -1) {
-        break; // All keys exhausted
+    console.log('geminiService.js: generate started');
+    try {
+      if (!this._ensureClients()) {
+        throw new Error('Gemini API key not configured');
       }
 
-      const client = this.clients[keyIndex];
-      const keyLabel = `Key #${keyIndex + 1}/${this.clients.length}`;
+      const fullPrompt = systemPrompt
+        ? `${systemPrompt}\n\nUser Query: ${prompt}`
+        : prompt;
 
-      try {
-        const response = await client.models.generateContent({
-          model: this.model,
-          contents: fullPrompt,
-          config: {
-            temperature: 0.7,
-            topP: 0.9,
-            maxOutputTokens: 1024,
-          },
-        });
+      let lastError = null;
 
-        // Success — prefer this key next time
-        this.currentKeyIndex = keyIndex;
+      // Try each available key
+      for (let attempt = 0; attempt < this.clients.length; attempt++) {
+        const keyIndex = this._getNextAvailableKeyIndex();
 
-        return {
-          content: response.text,
-          provider: 'gemini',
-          model: this.model,
-          keyUsed: keyIndex + 1,
-        };
-      } catch (error) {
-        lastError = error;
-        const errMsg = error.message || '';
-
-        // Check if it's a quota/rate limit error (429)
-        if (errMsg.includes('429') || errMsg.includes('RESOURCE_EXHAUSTED') || errMsg.includes('quota')) {
-          // Extract retry delay if available
-          const retryMatch = errMsg.match(/retryDelay.*?(\d+)/);
-          const cooldownMs = retryMatch ? parseInt(retryMatch[1]) * 1000 : 60000;
-
-          console.warn(`⚠️  Gemini ${keyLabel} quota exhausted. Cooldown: ${Math.round(cooldownMs / 1000)}s`);
-          this.exhaustedKeys.set(keyIndex, Date.now() + cooldownMs);
-
-          // Move to next key
-          this.currentKeyIndex = (keyIndex + 1) % this.clients.length;
-          continue;
+        if (keyIndex === -1) {
+          break; // All keys exhausted
         }
 
-        // Non-quota error — don't retry with other keys
-        throw new Error(`Gemini Error: ${error.message}`);
+        const client = this.clients[keyIndex];
+        const keyLabel = `Key #${keyIndex + 1}/${this.clients.length}`;
+
+        try {
+          const response = await client.models.generateContent({
+            model: this.model,
+            contents: fullPrompt,
+            config: {
+              temperature: 0.7,
+              topP: 0.9,
+              maxOutputTokens: 1024,
+            },
+          });
+
+          // Success — prefer this key next time
+          this.currentKeyIndex = keyIndex;
+
+          console.log('geminiService.js: generate succeeded');
+          return {
+            content: response.text,
+            provider: 'gemini',
+            model: this.model,
+            keyUsed: keyIndex + 1,
+          };
+        } catch (error) {
+          lastError = error;
+          const errMsg = error.message || '';
+
+          // Check if it's a quota/rate limit error (429)
+          if (errMsg.includes('429') || errMsg.includes('RESOURCE_EXHAUSTED') || errMsg.includes('quota')) {
+            // Extract retry delay if available
+            const retryMatch = errMsg.match(/retryDelay.*?(\d+)/);
+            const cooldownMs = retryMatch ? parseInt(retryMatch[1]) * 1000 : 60000;
+
+            console.warn(`⚠️  Gemini ${keyLabel} quota exhausted. Cooldown: ${Math.round(cooldownMs / 1000)}s`);
+            this.exhaustedKeys.set(keyIndex, Date.now() + cooldownMs);
+
+            // Move to next key
+            this.currentKeyIndex = (keyIndex + 1) % this.clients.length;
+            continue;
+          }
+
+          // Non-quota error — don't retry with other keys
+          console.error(`❌ geminiService.js: generate attempt ${attempt} then`, error);
+          throw new Error(`Gemini Error: ${error.message}`);
+        }
       }
+
+      // All keys exhausted
+      const cooldowns = [...this.exhaustedKeys.entries()].map(([idx, expiry]) => {
+        const secsLeft = Math.max(0, Math.round((expiry - Date.now()) / 1000));
+        return `Key #${idx + 1}: ${secsLeft}s`;
+      });
+
+      throw new Error(
+        `All ${this.clients.length} Gemini API key(s) exhausted. Cooldowns: ${cooldowns.join(', ')}`
+      );
+    } catch (e) {
+      console.error('geminiService.js: generate then', e);
+      throw e;
     }
-
-    // All keys exhausted
-    const cooldowns = [...this.exhaustedKeys.entries()].map(([idx, expiry]) => {
-      const secsLeft = Math.max(0, Math.round((expiry - Date.now()) / 1000));
-      return `Key #${idx + 1}: ${secsLeft}s`;
-    });
-
-    throw new Error(
-      `All ${this.clients.length} Gemini API key(s) exhausted. Cooldowns: ${cooldowns.join(', ')}`
-    );
   }
 }
 

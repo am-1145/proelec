@@ -46,7 +46,15 @@ class GoogleTranslateService {
    * @returns {boolean} True if the service is initialized
    */
   isAvailable() {
-    return this.available && this.client !== null;
+    console.log('googleTranslateService.js: isAvailable started');
+    try {
+      const isAvail = this.available && this.client !== null;
+      console.log('googleTranslateService.js: isAvailable succeeded');
+      return isAvail;
+    } catch (e) {
+      console.error('googleTranslateService.js: isAvailable then', e);
+      return false;
+    }
   }
 
   /**
@@ -57,17 +65,24 @@ class GoogleTranslateService {
    * @throws {Error} If translation fails
    */
   async translate(text, targetLanguageCode) {
-    if (!this.isAvailable()) {
-      throw new Error('Google Translate API is not configured');
+    console.log('googleTranslateService.js: translate started');
+    try {
+      if (!this.isAvailable()) {
+        throw new Error('Google Translate API is not configured');
+      }
+
+      const [translation, metadata] = await this.client.translate(text, targetLanguageCode);
+
+      console.log('googleTranslateService.js: translate succeeded');
+      return {
+        translatedText: translation,
+        detectedLanguage: metadata?.data?.translations?.[0]?.detectedSourceLanguage || 'unknown',
+        provider: 'google-translate',
+      };
+    } catch (e) {
+      console.error('googleTranslateService.js: translate then', e);
+      throw e;
     }
-
-    const [translation, metadata] = await this.client.translate(text, targetLanguageCode);
-
-    return {
-      translatedText: translation,
-      detectedLanguage: metadata?.data?.translations?.[0]?.detectedSourceLanguage || 'unknown',
-      provider: 'google-translate',
-    };
   }
 
   /**
@@ -76,17 +91,24 @@ class GoogleTranslateService {
    * @returns {Promise<{language: string, confidence: number}>}
    */
   async detectLanguage(text) {
-    if (!this.isAvailable()) {
-      throw new Error('Google Translate API is not configured');
+    console.log('googleTranslateService.js: detectLanguage started');
+    try {
+      if (!this.isAvailable()) {
+        throw new Error('Google Translate API is not configured');
+      }
+
+      const [detections] = await this.client.detect(text);
+      const detection = Array.isArray(detections) ? detections[0] : detections;
+
+      console.log('googleTranslateService.js: detectLanguage succeeded');
+      return {
+        language: detection.language,
+        confidence: detection.confidence,
+      };
+    } catch (e) {
+      console.error('googleTranslateService.js: detectLanguage then', e);
+      throw e;
     }
-
-    const [detections] = await this.client.detect(text);
-    const detection = Array.isArray(detections) ? detections[0] : detections;
-
-    return {
-      language: detection.language,
-      confidence: detection.confidence,
-    };
   }
 
   /**
@@ -94,12 +116,19 @@ class GoogleTranslateService {
    * @returns {Promise<Array<{code: string, name: string}>>}
    */
   async getSupportedLanguages() {
-    if (!this.isAvailable()) {
+    console.log('googleTranslateService.js: getSupportedLanguages started');
+    try {
+      if (!this.isAvailable()) {
+        return [];
+      }
+
+      const [languages] = await this.client.getLanguages();
+      console.log('googleTranslateService.js: getSupportedLanguages succeeded');
+      return languages;
+    } catch (e) {
+      console.error('googleTranslateService.js: getSupportedLanguages then', e);
       return [];
     }
-
-    const [languages] = await this.client.getLanguages();
-    return languages;
   }
 }
 

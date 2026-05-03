@@ -75,18 +75,34 @@ const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { st
 const item = { hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0 } };
 
 
+/**
+ * AccordionItem Component - Collapsible section for parliamentary information.
+ * Features ARIA attributes for expanded states and keyboard accessibility.
+ * @param {Object} props
+ * @param {Object} props.item - The FAQ item containing title and content.
+ * @param {boolean} props.isOpen - Whether the accordion is expanded.
+ * @param {Function} props.onToggle - Callback to toggle the accordion state.
+ * @returns {JSX.Element}
+ */
 function AccordionItem({ item: faqItem, isOpen, onToggle }) {
+  const id = `accordion-${faqItem.title.replace(/\s+/g, '-').toLowerCase()}`;
   return (
     <div className="border border-border rounded-xl overflow-hidden">
-      <button onClick={onToggle}
-        className="w-full flex items-center justify-between p-4 text-left hover:bg-bg-elevated/50 transition-colors">
+      <button 
+        onClick={onToggle}
+        aria-expanded={isOpen}
+        aria-controls={id}
+        className="w-full flex items-center justify-between p-4 text-left hover:bg-bg-elevated/50 transition-colors focus-visible:ring-2 focus-visible:ring-primary outline-none">
         <span className="text-sm font-semibold text-text-primary">{faqItem.title}</span>
-        {isOpen ? <FiChevronUp size={16} className="text-primary" /> : <FiChevronDown size={16} className="text-text-muted" />}
+        {isOpen ? <FiChevronUp size={16} className="text-primary" aria-hidden="true" /> : <FiChevronDown size={16} className="text-text-muted" aria-hidden="true" />}
       </button>
       <AnimatePresence>
         {isOpen && (
-          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }}>
+          <motion.div 
+            id={id}
+            initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }}
+            role="region">
             <div className="px-4 pb-4">
               <p className="text-sm text-text-secondary leading-relaxed">{faqItem.content}</p>
             </div>
@@ -97,6 +113,12 @@ function AccordionItem({ item: faqItem, isOpen, onToggle }) {
   );
 }
 
+/**
+ * ParliamentPage Component - Educational guide to India's legislative Houses.
+ * Features comparative data between Lok Sabha and Rajya Sabha, seat distributions, and FAQs.
+ * Implements accessible tabs, accordions, and semantic tables for high-standard accessibility.
+ * @returns {JSX.Element}
+ */
 export default function ParliamentPage() {
   const [activeTab, setActiveTab] = useState('lok-sabha');
   const [openFaq, setOpenFaq] = useState(0);
@@ -105,170 +127,183 @@ export default function ParliamentPage() {
   const displayedStates = showAllStates ? STATE_SEATS : STATE_SEATS.slice(0, 10);
 
   return (
-    <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
+    <motion.div variants={container} initial="hidden" animate="show" className="space-y-6" role="main" id="main-content">
       {/* Header */}
-      <motion.div variants={item} className="flex items-center gap-3">
-        <div className="w-11 h-11 rounded-xl bg-bg-elevated flex items-center justify-center shadow-lg shadow-primary/20">
+      <header className="flex items-center gap-3">
+        <div className="w-11 h-11 rounded-xl bg-bg-elevated flex items-center justify-center shadow-lg shadow-primary/20" aria-hidden="true">
           <span className="text-xl">🏛️</span>
         </div>
         <div>
           <h1 className="text-xl font-bold text-text-primary">Parliament of India</h1>
           <p className="text-xs text-text-muted">Understanding India's legislative system</p>
         </div>
-      </motion.div>
+      </header>
 
       {/* Tabs */}
-      <motion.div variants={item} className="flex rounded-xl bg-bg-elevated p-1 max-w-md">
+      <nav className="flex rounded-xl bg-bg-elevated p-1 max-w-md" role="tablist" aria-label="Parliamentary Houses">
         {[
           { key: 'lok-sabha', label: 'Lok Sabha', seats: '543' },
           { key: 'rajya-sabha', label: 'Rajya Sabha', seats: '245' },
         ].map(tab => (
-          <button key={tab.key} onClick={() => setActiveTab(tab.key)}
-            className={`flex-1 py-2.5 px-4 text-sm font-medium rounded-lg transition-all ${activeTab === tab.key
+          <button key={tab.key} 
+            role="tab"
+            aria-selected={activeTab === tab.key}
+            aria-controls={`${tab.key}-panel`}
+            onClick={() => setActiveTab(tab.key)}
+            className={`flex-1 py-2.5 px-4 text-sm font-medium rounded-lg transition-all outline-none focus-visible:ring-2 focus-visible:ring-primary ${activeTab === tab.key
                 ? 'bg-primary text-white shadow-md shadow-primary/20'
                 : 'text-text-muted hover:text-text-primary'
               }`}>
             {tab.label} <span className="ml-1 opacity-70">({tab.seats})</span>
           </button>
         ))}
-      </motion.div>
+      </nav>
 
       {/* House Info Cards */}
-      <AnimatePresence mode="wait">
-        {activeTab === 'lok-sabha' ? (
-          <motion.div key="lok-sabha" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
-            className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Lok Sabha Overview */}
-            <div className="glass-card p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <img src="/assets/lok-sabha-icon.png" alt="Lok Sabha" className="w-10 h-10 object-contain drop-shadow-lg" />
-                <div>
-                  <h2 className="text-lg font-bold text-text-primary">Lok Sabha</h2>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/15 text-primary font-medium">House of the People</span>
-                </div>
-              </div>
-
-              <div className="rounded-xl overflow-hidden border border-border/30 mb-2">
-                <img src="/assets/lok-sabha-hemicycle.png" alt="Lok Sabha Chamber" className="w-full h-auto object-cover" />
-              </div>
-              <p className="text-center text-xs text-text-muted font-medium mb-2">{LOK_SABHA.totalSeats} Total Seats</p>
-
-              <div className="mt-5 space-y-2.5">
-                {[
-                  { label: 'Total Seats', value: LOK_SABHA.totalSeats },
-                  { label: 'Term', value: LOK_SABHA.term },
-                  { label: 'Minimum Age', value: `${LOK_SABHA.minimumAge} years` },
-                  { label: 'Presiding Officer', value: LOK_SABHA.speaker },
-                  { label: 'Quorum', value: LOK_SABHA.quorum },
-                ].map((row, i) => (
-                  <div key={i} className="flex justify-between py-2 border-b border-border/50 last:border-0">
-                    <span className="text-sm text-text-muted">{row.label}</span>
-                    <span className="text-sm font-medium text-text-primary">{row.value}</span>
+      <section aria-live="polite" aria-atomic="true">
+        <AnimatePresence mode="wait">
+          {activeTab === 'lok-sabha' ? (
+            <motion.div 
+              key="lok-sabha" 
+              id="lok-sabha-panel"
+              role="tabpanel"
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+              className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Lok Sabha Overview */}
+              <article className="glass-card p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center text-xl" aria-hidden="true">👥</div>
+                  <div>
+                    <h2 className="text-lg font-bold text-text-primary">Lok Sabha</h2>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/15 text-primary font-medium">House of the People</span>
                   </div>
-                ))}
-              </div>
-            </div>
+                </div>
 
-            {/* Sessions */}
-            <div className="glass-card p-6">
-              <h3 className="text-base font-bold text-text-primary mb-4 flex items-center gap-2">
-                📅 Parliamentary Sessions
-              </h3>
-              <div className="space-y-3">
-                {LOK_SABHA.sessions.map((session, i) => {
-                  const icons = ['🌸', '🌧️', '❄️'];
-                  return (
-                    <div key={i} className="p-3.5 rounded-xl bg-bg-elevated border border-border/50">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-base">{icons[i]}</span>
-                        <h4 className="text-sm font-semibold text-text-primary">{session}</h4>
+                <div className="rounded-xl overflow-hidden border border-border/30 mb-2" aria-hidden="true">
+                  <div className="w-full h-40 bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center text-3xl font-bold text-primary/40">
+                    Hemicycle View
+                  </div>
+                </div>
+                <p className="text-center text-xs text-text-muted font-medium mb-2">{LOK_SABHA.totalSeats} Total Seats</p>
+
+                <div className="mt-5 space-y-2.5" role="list">
+                  {[
+                    { label: 'Total Seats', value: LOK_SABHA.totalSeats },
+                    { label: 'Term', value: LOK_SABHA.term },
+                    { label: 'Minimum Age', value: `${LOK_SABHA.minimumAge} years` },
+                    { label: 'Presiding Officer', value: LOK_SABHA.speaker },
+                    { label: 'Quorum', value: LOK_SABHA.quorum },
+                  ].map((row, i) => (
+                    <div key={i} role="listitem" className="flex justify-between py-2 border-b border-border/50 last:border-0">
+                      <span className="text-sm text-text-muted">{row.label}</span>
+                      <span className="text-sm font-medium text-text-primary">{row.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </article>
+
+              {/* Sessions */}
+              <article className="glass-card p-6">
+                <h3 className="text-base font-bold text-text-primary mb-4 flex items-center gap-2">
+                  <FiClock className="text-primary" aria-hidden="true" /> Parliamentary Sessions
+                </h3>
+                <div className="space-y-3" role="list">
+                  {LOK_SABHA.sessions.map((session, i) => {
+                    const icons = ['🌸', '🌧️', '❄️'];
+                    return (
+                      <div key={i} role="listitem" className="p-3.5 rounded-xl bg-bg-elevated border border-border/50">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-base" aria-hidden="true">{icons[i]}</span>
+                          <h4 className="text-sm font-semibold text-text-primary">{session}</h4>
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              <div className="mt-5 p-4 rounded-xl bg-primary/5 border border-primary/10">
-                <p className="text-xs text-text-secondary leading-relaxed">
-                  <strong className="text-primary">Did you know?</strong> The Lok Sabha was constituted for the first time on 17 April 1952 after the first general elections held from 25 October 1951 to 21 February 1952.
-                </p>
-              </div>
-            </div>
-          </motion.div>
-        ) : (
-          <motion.div key="rajya-sabha" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
-            className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Rajya Sabha Overview */}
-            <div className="glass-card p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <img src="/assets/rajya-sabha-icon.png" alt="Rajya Sabha" className="w-10 h-10 object-contain drop-shadow-lg" />
-                <div>
-                  <h2 className="text-lg font-bold text-text-primary">Rajya Sabha</h2>
-                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-secondary/15 text-secondary font-medium">Council of States</span>
+                    );
+                  })}
                 </div>
-              </div>
-
-              <div className="rounded-xl overflow-hidden border border-border/30 mb-2">
-                <img src="/assets/rajya-sabha-hemicycle.png" alt="Rajya Sabha Chamber" className="w-full h-auto object-cover" />
-              </div>
-              <p className="text-center text-xs text-text-muted font-medium mb-2">{RAJYA_SABHA.totalSeats} Total Seats</p>
-
-              <div className="mt-5 space-y-2.5">
-                {[
-                  { label: 'Total Seats', value: RAJYA_SABHA.totalSeats },
-                  { label: 'Elected Members', value: RAJYA_SABHA.elected },
-                  { label: 'Nominated by President', value: RAJYA_SABHA.nominated },
-                  { label: 'Term', value: RAJYA_SABHA.term },
-                  { label: 'Minimum Age', value: `${RAJYA_SABHA.minimumAge} years` },
-                  { label: 'Chairman', value: RAJYA_SABHA.chairman },
-                ].map((row, i) => (
-                  <div key={i} className="flex justify-between py-2 border-b border-border/50 last:border-0">
-                    <span className="text-sm text-text-muted">{row.label}</span>
-                    <span className="text-sm font-medium text-text-primary">{row.value}</span>
+              </article>
+            </motion.div>
+          ) : (
+            <motion.div 
+              key="rajya-sabha" 
+              id="rajya-sabha-panel"
+              role="tabpanel"
+              initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+              className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Rajya Sabha Overview */}
+              <article className="glass-card p-6">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 bg-secondary/10 rounded-lg flex items-center justify-center text-xl" aria-hidden="true">🏛️</div>
+                  <div>
+                    <h2 className="text-lg font-bold text-text-primary">Rajya Sabha</h2>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-secondary/15 text-secondary font-medium">Council of States</span>
                   </div>
-                ))}
-              </div>
-            </div>
+                </div>
 
-            {/* Rajya Sabha Key Features */}
-            <div className="glass-card p-6">
-              <h3 className="text-base font-bold text-text-primary mb-4 flex items-center gap-2">
-                ⚡ Key Features
-              </h3>
-              <div className="space-y-3">
-                {[
-                  { title: 'Permanent Body', desc: 'Rajya Sabha is never fully dissolved. 1/3rd members retire every 2 years.', icon: '♾️' },
-                  { title: 'State Representation', desc: 'Members are elected by state legislative assemblies via proportional representation.', icon: '🗺️' },
-                  { title: 'Special Powers', desc: 'Can create new All India Services (Art. 312) and move resolution to transfer state subjects to Parliament.', icon: '⚖️' },
-                  { title: 'No Money Bills', desc: 'Cannot introduce or reject Money Bills. Can only suggest amendments within 14 days.', icon: '💰' },
-                ].map((feature, i) => (
-                  <div key={i} className="p-3.5 rounded-xl bg-bg-elevated border border-border/50">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-base">{feature.icon}</span>
-                      <h4 className="text-sm font-semibold text-text-primary">{feature.title}</h4>
+                <div className="rounded-xl overflow-hidden border border-border/30 mb-2" aria-hidden="true">
+                  <div className="w-full h-40 bg-gradient-to-br from-secondary/20 to-primary/20 flex items-center justify-center text-3xl font-bold text-secondary/40">
+                    Hemicycle View
+                  </div>
+                </div>
+                <p className="text-center text-xs text-text-muted font-medium mb-2">{RAJYA_SABHA.totalSeats} Total Seats</p>
+
+                <div className="mt-5 space-y-2.5" role="list">
+                  {[
+                    { label: 'Total Seats', value: RAJYA_SABHA.totalSeats },
+                    { label: 'Elected Members', value: RAJYA_SABHA.elected },
+                    { label: 'Nominated by President', value: RAJYA_SABHA.nominated },
+                    { label: 'Term', value: RAJYA_SABHA.term },
+                    { label: 'Minimum Age', value: `${RAJYA_SABHA.minimumAge} years` },
+                    { label: 'Chairman', value: RAJYA_SABHA.chairman },
+                  ].map((row, i) => (
+                    <div key={i} role="listitem" className="flex justify-between py-2 border-b border-border/50 last:border-0">
+                      <span className="text-sm text-text-muted">{row.label}</span>
+                      <span className="text-sm font-medium text-text-primary">{row.value}</span>
                     </div>
-                    <p className="text-xs text-text-muted leading-relaxed pl-7">{feature.desc}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+                  ))}
+                </div>
+              </article>
+
+              {/* Rajya Sabha Key Features */}
+              <article className="glass-card p-6">
+                <h3 className="text-base font-bold text-text-primary mb-4 flex items-center gap-2">
+                  <FiInfo className="text-secondary" aria-hidden="true" /> Key Features
+                </h3>
+                <div className="space-y-3" role="list">
+                  {[
+                    { title: 'Permanent Body', desc: 'Rajya Sabha is never fully dissolved. 1/3rd members retire every 2 years.', icon: '♾️' },
+                    { title: 'State Representation', desc: 'Members are elected by state legislative assemblies via proportional representation.', icon: '🗺️' },
+                    { title: 'Special Powers', desc: 'Can create new All India Services (Art. 312).', icon: '⚖️' },
+                    { title: 'No Money Bills', desc: 'Cannot introduce or reject Money Bills.', icon: '💰' },
+                  ].map((feature, i) => (
+                    <div key={i} role="listitem" className="p-3.5 rounded-xl bg-bg-elevated border border-border/50">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-base" aria-hidden="true">{feature.icon}</span>
+                        <h4 className="text-sm font-semibold text-text-primary">{feature.title}</h4>
+                      </div>
+                      <p className="text-xs text-text-muted leading-relaxed pl-7">{feature.desc}</p>
+                    </div>
+                  ))}
+                </div>
+              </article>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </section>
 
       {/* State-wise Seat Distribution */}
-      <motion.div variants={item} className="glass-card p-6">
-        <h3 className="text-base font-bold text-text-primary mb-4 flex items-center gap-2">
+      <section className="glass-card p-6" aria-labelledby="distribution-title">
+        <h3 id="distribution-title" className="text-base font-bold text-text-primary mb-4 flex items-center gap-2">
           📊 State-wise Seat Distribution (Top States)
         </h3>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
+            <caption className="sr-only">Parliamentary seat distribution by state</caption>
             <thead>
               <tr className="border-b border-border">
-                <th className="text-left py-2.5 text-text-muted font-medium text-xs">State</th>
-                <th className="text-center py-2.5 text-text-muted font-medium text-xs">Lok Sabha</th>
-                <th className="text-center py-2.5 text-text-muted font-medium text-xs">Rajya Sabha</th>
-                <th className="text-center py-2.5 text-text-muted font-medium text-xs">Total</th>
+                <th scope="col" className="text-left py-2.5 text-text-muted font-medium text-xs">State</th>
+                <th scope="col" className="text-center py-2.5 text-text-muted font-medium text-xs">Lok Sabha</th>
+                <th scope="col" className="text-center py-2.5 text-text-muted font-medium text-xs">Rajya Sabha</th>
+                <th scope="col" className="text-center py-2.5 text-text-muted font-medium text-xs">Total</th>
               </tr>
             </thead>
             <tbody>
@@ -288,31 +323,38 @@ export default function ParliamentPage() {
           </table>
         </div>
         <button onClick={() => setShowAllStates(!showAllStates)}
-          className="mt-3 text-xs text-primary hover:underline flex items-center gap-1 mx-auto">
+          aria-label={showAllStates ? 'Show fewer states' : `Show all ${STATE_SEATS.length} states`}
+          className="mt-3 text-xs text-primary hover:underline flex items-center gap-1 mx-auto focus-visible:ring-2 focus-visible:ring-primary outline-none rounded">
           {showAllStates ? 'Show Less' : `Show All ${STATE_SEATS.length} States`}
-          {showAllStates ? <FiChevronUp size={12} /> : <FiChevronDown size={12} />}
+          {showAllStates ? <FiChevronUp size={12} aria-hidden="true" /> : <FiChevronDown size={12} aria-hidden="true" />}
         </button>
-      </motion.div>
+      </section>
 
       {/* How Parliament Works — FAQ */}
-      <motion.div variants={item}>
-        <h3 className="text-base font-bold text-text-primary mb-4 flex items-center gap-2">
-          <FiInfo className="text-primary" /> How Parliament Works
+      <section aria-labelledby="faq-title">
+        <h3 id="faq-title" className="text-base font-bold text-text-primary mb-4 flex items-center gap-2">
+          <FiInfo className="text-primary" aria-hidden="true" /> How Parliament Works
         </h3>
-        <div className="space-y-2">
+        <div className="space-y-2" role="list">
           {HOW_PARLIAMENT_WORKS.map((faq, i) => (
-            <AccordionItem key={i} item={faq} isOpen={openFaq === i} onToggle={() => setOpenFaq(openFaq === i ? -1 : i)} />
+            <div key={i} role="listitem">
+              <AccordionItem item={faq} isOpen={openFaq === i} onToggle={() => setOpenFaq(openFaq === i ? -1 : i)} />
+            </div>
           ))}
         </div>
-      </motion.div>
+      </section>
 
       {/* Footer Link */}
-      <motion.div variants={item} className="text-center pb-4">
+      <footer className="text-center pb-4">
         <a href="https://sansad.in" target="_blank" rel="noreferrer"
-          className="inline-flex items-center gap-2 text-sm text-primary hover:underline">
-          Visit sansad.in for Official Parliament Info <FiExternalLink size={14} />
+          aria-label="Visit the official Sansad.in portal for more parliament information (External site)"
+          className="inline-flex items-center gap-2 text-sm text-primary hover:underline outline-none focus-visible:ring-2 focus-visible:ring-primary rounded">
+          Visit sansad.in for Official Parliament Info <FiExternalLink size={14} aria-hidden="true" />
         </a>
-      </motion.div>
+      </footer>
+    </motion.div>
+  );
+}
     </motion.div>
   );
 }

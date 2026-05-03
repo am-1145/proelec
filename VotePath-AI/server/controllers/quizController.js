@@ -38,18 +38,28 @@ const STATIC_QUIZ = {
  * @returns {{ success: boolean, data: { questions: Array }, provider: string }}
  */
 const getQuiz = asyncHandler(async (req, res) => {
-  let quizData;
+  console.log('quizController.js: getQuiz started');
   try {
-    const { system, prompt } = prompts.quiz();
-    const result = await aiService.generate(prompt, system);
-    const jsonMatch = result.content.match(/\{[\s\S]*\}/);
-    quizData = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
-    if (quizData && quizData.questions && quizData.questions.length >= 5) {
-      return res.json({ success: true, data: quizData, provider: result.provider });
+    let quizData;
+    try {
+      const { system, prompt } = prompts.quiz();
+      const result = await aiService.generate(prompt, system);
+      const jsonMatch = result.content.match(/\{[\s\S]*\}/);
+      quizData = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
+      if (quizData && quizData.questions && quizData.questions.length >= 5) {
+        console.log('quizController.js: getQuiz succeeded (AI)');
+        return res.json({ success: true, data: quizData, provider: result.provider });
+      }
+    } catch (e) { 
+      console.warn('quizController.js: AI quiz generation failed, falling back to static');
     }
-  } catch (e) { /* fall through */ }
 
-  res.json({ success: true, data: STATIC_QUIZ, provider: 'static' });
+    console.log('quizController.js: getQuiz succeeded (static)');
+    res.json({ success: true, data: STATIC_QUIZ, provider: 'static' });
+  } catch (e) {
+    console.error('quizController.js: getQuiz then', e);
+    throw e;
+  }
 });
 
 /**
@@ -63,33 +73,40 @@ const getQuiz = asyncHandler(async (req, res) => {
  * @returns {{ success: boolean, data: { score: number, total: number, percentage: number, results: Array } }}
  */
 const submitQuiz = asyncHandler(async (req, res) => {
-  const { userId, answers } = req.body;
-  if (!userId || !answers) return res.status(400).json({ success: false, error: 'userId and answers required.' });
+  console.log('quizController.js: submitQuiz started');
+  try {
+    const { userId, answers } = req.body;
+    if (!userId || !answers) return res.status(400).json({ success: false, error: 'userId and answers required.' });
 
-  const quiz = STATIC_QUIZ;
-  let score = 0;
-  const results = answers.map(a => {
-    const q = quiz.questions.find(q => q.id === a.questionId);
-    const correct = q && q.correct === a.selectedAnswer;
-    if (correct) score++;
-    return { questionId: a.questionId, selectedAnswer: a.selectedAnswer, correct };
-  });
+    const quiz = STATIC_QUIZ;
+    let score = 0;
+    const results = answers.map(a => {
+      const q = quiz.questions.find(q => q.id === a.questionId);
+      const correct = q && q.correct === a.selectedAnswer;
+      if (correct) score++;
+      return { questionId: a.questionId, selectedAnswer: a.selectedAnswer, correct };
+    });
 
-  const quizResult = await QuizResult.create({
-    userId, score, totalQuestions: quiz.questions.length, answers: results,
-  });
+    const quizResult = await QuizResult.create({
+      userId, score, totalQuestions: quiz.questions.length, answers: results,
+    });
 
-  // Update readiness score
-  const user = await User.findById(userId);
-  if (user && score >= 7) {
-    user.readinessScore = Math.min(100, user.readinessScore + 10);
-    await user.save();
+    // Update readiness score
+    const user = await User.findById(userId);
+    if (user && score >= 7) {
+      user.readinessScore = Math.min(100, user.readinessScore + 10);
+      await user.save();
+    }
+
+    console.log('quizController.js: submitQuiz succeeded');
+    res.json({
+      success: true,
+      data: { score, total: quiz.questions.length, percentage: Math.round((score / quiz.questions.length) * 100), results, readinessBonus: score >= 7 },
+    });
+  } catch (e) {
+    console.error('quizController.js: submitQuiz then', e);
+    throw e;
   }
-
-  res.json({
-    success: true,
-    data: { score, total: quiz.questions.length, percentage: Math.round((score / quiz.questions.length) * 100), results, readinessBonus: score >= 7 },
-  });
 });
 
 module.exports = { getQuiz, submitQuiz };

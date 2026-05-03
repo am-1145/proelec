@@ -44,7 +44,15 @@ class GoogleNLPService {
    * @returns {boolean} True if the service is initialized
    */
   isAvailable() {
-    return this.available && this.client !== null;
+    console.log('googleNLPService.js: isAvailable started');
+    try {
+      const isAvail = this.available && this.client !== null;
+      console.log('googleNLPService.js: isAvailable succeeded');
+      return isAvail;
+    } catch (e) {
+      console.error('googleNLPService.js: isAvailable then', e);
+      return false;
+    }
   }
 
   /**
@@ -58,6 +66,7 @@ class GoogleNLPService {
    *   - label: 'positive' | 'negative' | 'neutral' | 'mixed'
    */
   async analyzeSentiment(text) {
+    console.log('googleNLPService.js: analyzeSentiment started');
     if (!this.isAvailable()) {
       // Graceful fallback — return neutral sentiment
       return { score: 0, magnitude: 0, label: 'neutral', provider: 'fallback' };
@@ -78,6 +87,7 @@ class GoogleNLPService {
       else if (sentiment.score < -0.25) label = 'negative';
       else if (sentiment.magnitude > 1.5) label = 'mixed';
 
+      console.log('googleNLPService.js: analyzeSentiment succeeded');
       return {
         score: sentiment.score,
         magnitude: sentiment.magnitude,
@@ -85,7 +95,7 @@ class GoogleNLPService {
         provider: 'google-nlp',
       };
     } catch (error) {
-      console.warn('NLP sentiment analysis failed:', error.message);
+      console.error('googleNLPService.js: analyzeSentiment then', error);
       return { score: 0, magnitude: 0, label: 'neutral', provider: 'fallback' };
     }
   }
@@ -97,6 +107,7 @@ class GoogleNLPService {
    * @returns {Promise<Array<{name: string, confidence: number}>>}
    */
   async classifyContent(text) {
+    console.log('googleNLPService.js: classifyContent started');
     if (!this.isAvailable() || text.length < 20) {
       return [];
     }
@@ -108,12 +119,13 @@ class GoogleNLPService {
       };
 
       const [result] = await this.client.classifyText({ document });
+      console.log('googleNLPService.js: classifyContent succeeded');
       return (result.categories || []).map(cat => ({
         name: cat.name,
         confidence: cat.confidence,
       }));
     } catch (error) {
-      console.warn('NLP classification failed:', error.message);
+      console.error('googleNLPService.js: classifyContent then', error);
       return [];
     }
   }
@@ -125,6 +137,7 @@ class GoogleNLPService {
    * @returns {Promise<Array<{name: string, type: string, salience: number}>>}
    */
   async extractEntities(text) {
+    console.log('googleNLPService.js: extractEntities started');
     if (!this.isAvailable()) {
       return [];
     }
@@ -136,13 +149,14 @@ class GoogleNLPService {
       };
 
       const [result] = await this.client.analyzeEntities({ document });
+      console.log('googleNLPService.js: extractEntities succeeded');
       return (result.entities || []).map(entity => ({
         name: entity.name,
         type: entity.type,
         salience: entity.salience,
       }));
     } catch (error) {
-      console.warn('NLP entity extraction failed:', error.message);
+      console.error('googleNLPService.js: extractEntities then', error);
       return [];
     }
   }

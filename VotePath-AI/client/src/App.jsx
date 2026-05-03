@@ -40,10 +40,7 @@ const TranslatorPage = lazy(() => import('./pages/TranslatorPage'));
  */
 function SkipToContent() {
   return (
-    <a
-      href="#main-content"
-      className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:px-4 focus:py-2 focus:bg-primary focus:text-white focus:rounded-lg focus:shadow-xl focus:outline-none focus:ring-2 focus:ring-white"
-    >
+    <a href="#main-content" className="skip-link">
       Skip to main content
     </a>
   );
@@ -132,7 +129,7 @@ function AppRoutes() {
   if (loading) return <LoadingScreen text="Starting VotePath AI" />;
 
   return (
-    <main id="main-content" tabIndex="-1" className="outline-none">
+    <div className="min-h-screen">
       <Routes>
         <Route path="/" element={
           user ? (
@@ -172,7 +169,7 @@ function AppRoutes() {
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
-    </main>
+    </div>
   );
 }
 

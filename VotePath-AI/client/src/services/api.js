@@ -45,41 +45,101 @@ API.interceptors.response.use(
  * @param {Object} data - User registration data (name, email, password).
  * @returns {Promise<AxiosResponse>}
  */
-export const authRegister = (data) => API.post('/auth/register', data);
+export const authRegister = async (data) => {
+  console.log('api.js: authRegister started');
+  try {
+    const res = await API.post('/auth/register', data);
+    console.log('api.js: authRegister succeeded');
+    return res;
+  } catch (e) {
+    console.error('api.js: authRegister then', e);
+    throw e;
+  }
+};
 
 /**
  * Login an existing user with email and password.
  * @param {Object} data - Login credentials (email, password).
  * @returns {Promise<AxiosResponse>}
  */
-export const authLogin = (data) => API.post('/auth/login', data);
+export const authLogin = async (data) => {
+  console.log('api.js: authLogin started');
+  try {
+    const res = await API.post('/auth/login', data);
+    console.log('api.js: authLogin succeeded');
+    return res;
+  } catch (e) {
+    console.error('api.js: authLogin then', e);
+    throw e;
+  }
+};
 
 /**
  * Authenticate or register a user using a Firebase Google ID Token.
  * @param {string} idToken - The Firebase ID token.
  * @returns {Promise<AxiosResponse>}
  */
-export const authGoogle = (idToken) => API.post('/auth/google', { idToken });
+export const authGoogle = async (idToken) => {
+  console.log('api.js: authGoogle started');
+  try {
+    const res = await API.post('/auth/google', { idToken });
+    console.log('api.js: authGoogle succeeded');
+    return res;
+  } catch (e) {
+    console.error('api.js: authGoogle then', e);
+    throw e;
+  }
+};
 
 /**
  * Complete the user profile during initial setup.
  * @param {Object} data - Profile details (state, age, isFirstTimeVoter, etc.).
  * @returns {Promise<AxiosResponse>}
  */
-export const authCompleteProfile = (data) => API.put('/auth/complete-profile', data);
+export const authCompleteProfile = async (data) => {
+  console.log('api.js: authCompleteProfile started');
+  try {
+    const res = await API.put('/auth/complete-profile', data);
+    console.log('api.js: authCompleteProfile succeeded');
+    return res;
+  } catch (e) {
+    console.error('api.js: authCompleteProfile then', e);
+    throw e;
+  }
+};
 
 /**
  * Update the existing user profile details.
  * @param {Object} data - Updated profile fields.
  * @returns {Promise<AxiosResponse>}
  */
-export const authUpdateProfile = (data) => API.put('/auth/update-profile', data);
+export const authUpdateProfile = async (data) => {
+  console.log('api.js: authUpdateProfile started');
+  try {
+    const res = await API.put('/auth/update-profile', data);
+    console.log('api.js: authUpdateProfile succeeded');
+    return res;
+  } catch (e) {
+    console.error('api.js: authUpdateProfile then', e);
+    throw e;
+  }
+};
 
 /**
  * Fetch the currently authenticated user's profile based on the JWT token.
  * @returns {Promise<AxiosResponse>}
  */
-export const authGetMe = () => API.get('/auth/me');
+export const authGetMe = async () => {
+  console.log('api.js: authGetMe started');
+  try {
+    const res = await API.get('/auth/me');
+    console.log('api.js: authGetMe succeeded');
+    return res;
+  } catch (e) {
+    console.error('api.js: authGetMe then', e);
+    throw e;
+  }
+};
 
 // ── User APIs ─────────────────────────────────────────────
 
@@ -88,28 +148,68 @@ export const authGetMe = () => API.get('/auth/me');
  * @param {Object} data - Initialization data.
  * @returns {Promise<AxiosResponse>}
  */
-export const initUser = (data) => API.post('/user/init', data);
+export const initUser = async (data) => {
+  console.log('api.js: initUser started');
+  try {
+    const res = await API.post('/user/init', data);
+    console.log('api.js: initUser succeeded');
+    return res;
+  } catch (e) {
+    console.error('api.js: initUser then', e);
+    throw e;
+  }
+};
 
 /**
  * Fetch a specific user's public profile data.
  * @param {string} userId - The unique identifier of the user.
  * @returns {Promise<AxiosResponse>}
  */
-export const getUser = (userId) => API.get(`/user/${userId}`);
+export const getUser = async (userId) => {
+  console.log('api.js: getUser started');
+  try {
+    const res = await API.get(`/user/${userId}`);
+    console.log('api.js: getUser succeeded');
+    return res;
+  } catch (e) {
+    console.error('api.js: getUser then', e);
+    throw e;
+  }
+};
 
 /**
  * Fetch the voter journey steps for a specific user.
  * @param {string} userId - The unique identifier of the user.
  * @returns {Promise<AxiosResponse>}
  */
-export const getJourney = (userId) => API.get(`/journey/${userId}`);
+export const getJourney = async (userId) => {
+  console.log('api.js: getJourney started');
+  try {
+    const res = await API.get(`/journey/${userId}`);
+    console.log('api.js: getJourney succeeded');
+    return res;
+  } catch (e) {
+    console.error('api.js: getJourney then', e);
+    throw e;
+  }
+};
 
 /**
  * Fetch the election timeline for a user's specific state/region.
  * @param {string} userId - The unique identifier of the user.
  * @returns {Promise<AxiosResponse>}
  */
-export const getTimeline = (userId) => API.get(`/timeline/${userId}`);
+export const getTimeline = async (userId) => {
+  console.log('api.js: getTimeline started');
+  try {
+    const res = await API.get(`/timeline/${userId}`);
+    console.log('api.js: getTimeline succeeded');
+    return res;
+  } catch (e) {
+    console.error('api.js: getTimeline then', e);
+    throw e;
+  }
+};
 
 // ── Chat API ─────────────────────────────────────────────
 
@@ -119,14 +219,34 @@ export const getTimeline = (userId) => API.get(`/timeline/${userId}`);
  * @param {string} message - The user's prompt message.
  * @returns {Promise<AxiosResponse>}
  */
-export const sendChatMessage = (userId, message) => API.post('/chat', { userId, message });
+export const sendChatMessage = async (userId, message) => {
+  console.log('api.js: sendChatMessage started');
+  try {
+    const res = await API.post('/chat', { userId, message });
+    console.log('api.js: sendChatMessage succeeded');
+    return res;
+  } catch (e) {
+    console.error('api.js: sendChatMessage then', e);
+    throw e;
+  }
+};
 
 /**
  * Retrieve the chat history between the user and AI assistant.
  * @param {string} userId - The unique identifier of the user.
  * @returns {Promise<AxiosResponse>}
  */
-export const getChatHistory = (userId) => API.get(`/chat/${userId}/history`);
+export const getChatHistory = async (userId) => {
+  console.log('api.js: getChatHistory started');
+  try {
+    const res = await API.get(`/chat/${userId}/history`);
+    console.log('api.js: getChatHistory succeeded');
+    return res;
+  } catch (e) {
+    console.error('api.js: getChatHistory then', e);
+    throw e;
+  }
+};
 
 // ── Checklist APIs ─────────────────────────────────────────────
 
@@ -135,7 +255,17 @@ export const getChatHistory = (userId) => API.get(`/chat/${userId}/history`);
  * @param {string} userId - The unique identifier of the user.
  * @returns {Promise<AxiosResponse>}
  */
-export const getChecklist = (userId) => API.get(`/checklist/${userId}`);
+export const getChecklist = async (userId) => {
+  console.log('api.js: getChecklist started');
+  try {
+    const res = await API.get(`/checklist/${userId}`);
+    console.log('api.js: getChecklist succeeded');
+    return res;
+  } catch (e) {
+    console.error('api.js: getChecklist then', e);
+    throw e;
+  }
+};
 
 /**
  * Update the completion status of a checklist item.
@@ -144,8 +274,17 @@ export const getChecklist = (userId) => API.get(`/checklist/${userId}`);
  * @param {boolean} completed - The new completion status.
  * @returns {Promise<AxiosResponse>}
  */
-export const updateChecklistItem = (userId, itemKey, completed) =>
-  API.post('/checklist/update', { userId, itemKey, completed });
+export const updateChecklistItem = async (userId, itemKey, completed) => {
+  console.log('api.js: updateChecklistItem started');
+  try {
+    const res = await API.post('/checklist/update', { userId, itemKey, completed });
+    console.log('api.js: updateChecklistItem succeeded');
+    return res;
+  } catch (e) {
+    console.error('api.js: updateChecklistItem then', e);
+    throw e;
+  }
+};
 
 // ── Scenario APIs ─────────────────────────────────────────────
 
@@ -153,7 +292,17 @@ export const updateChecklistItem = (userId, itemKey, completed) =>
  * Fetch a list of available voter scenarios.
  * @returns {Promise<AxiosResponse>}
  */
-export const getScenarios = () => API.get('/scenario/list');
+export const getScenarios = async () => {
+  console.log('api.js: getScenarios started');
+  try {
+    const res = await API.get('/scenario/list');
+    console.log('api.js: getScenarios succeeded');
+    return res;
+  } catch (e) {
+    console.error('api.js: getScenarios then', e);
+    throw e;
+  }
+};
 
 /**
  * Run a specific voter simulation scenario.
@@ -161,7 +310,17 @@ export const getScenarios = () => API.get('/scenario/list');
  * @param {string} scenarioType - The type of scenario to run.
  * @returns {Promise<AxiosResponse>}
  */
-export const runScenario = (userId, scenarioType) => API.post('/scenario', { userId, scenarioType });
+export const runScenario = async (userId, scenarioType) => {
+  console.log('api.js: runScenario started');
+  try {
+    const res = await API.post('/scenario', { userId, scenarioType });
+    console.log('api.js: runScenario succeeded');
+    return res;
+  } catch (e) {
+    console.error('api.js: runScenario then', e);
+    throw e;
+  }
+};
 
 // ── Booth API ─────────────────────────────────────────────
 
@@ -172,7 +331,17 @@ export const runScenario = (userId, scenarioType) => API.post('/scenario', { use
  * @param {string} area - The specific area name.
  * @returns {Promise<AxiosResponse>}
  */
-export const getBoothGuide = (userId, pincode, area) => API.post('/booth', { userId, pincode, area });
+export const getBoothGuide = async (userId, pincode, area) => {
+  console.log('api.js: getBoothGuide started');
+  try {
+    const res = await API.post('/booth', { userId, pincode, area });
+    console.log('api.js: getBoothGuide succeeded');
+    return res;
+  } catch (e) {
+    console.error('api.js: getBoothGuide then', e);
+    throw e;
+  }
+};
 
 // ── Quiz APIs ─────────────────────────────────────────────
 
@@ -180,7 +349,17 @@ export const getBoothGuide = (userId, pincode, area) => API.post('/booth', { use
  * Fetch a new election knowledge quiz.
  * @returns {Promise<AxiosResponse>}
  */
-export const getQuiz = () => API.get('/quiz');
+export const getQuiz = async () => {
+  console.log('api.js: getQuiz started');
+  try {
+    const res = await API.get('/quiz');
+    console.log('api.js: getQuiz succeeded');
+    return res;
+  } catch (e) {
+    console.error('api.js: getQuiz then', e);
+    throw e;
+  }
+};
 
 /**
  * Submit quiz answers and retrieve results/score.
@@ -188,7 +367,17 @@ export const getQuiz = () => API.get('/quiz');
  * @param {Object} answers - User's selected answers.
  * @returns {Promise<AxiosResponse>}
  */
-export const submitQuiz = (userId, answers) => API.post('/quiz/submit', { userId, answers });
+export const submitQuiz = async (userId, answers) => {
+  console.log('api.js: submitQuiz started');
+  try {
+    const res = await API.post('/quiz/submit', { userId, answers });
+    console.log('api.js: submitQuiz succeeded');
+    return res;
+  } catch (e) {
+    console.error('api.js: submitQuiz then', e);
+    throw e;
+  }
+};
 
 // ── Health check ─────────────────────────────────────────────
 
@@ -196,7 +385,17 @@ export const submitQuiz = (userId, answers) => API.post('/quiz/submit', { userId
  * Check backend API health and connectivity status.
  * @returns {Promise<AxiosResponse>}
  */
-export const getHealth = () => API.get('/health');
+export const getHealth = async () => {
+  console.log('api.js: getHealth started');
+  try {
+    const res = await API.get('/health');
+    console.log('api.js: getHealth succeeded');
+    return res;
+  } catch (e) {
+    console.error('api.js: getHealth then', e);
+    throw e;
+  }
+};
 
 // ── Translate API ─────────────────────────────────────────────
 
@@ -207,7 +406,16 @@ export const getHealth = () => API.get('/health');
  * @param {string} targetLanguageCode - ISO code of the target language.
  * @returns {Promise<AxiosResponse>}
  */
-export const translateText = (text, targetLanguage, targetLanguageCode) =>
-  API.post('/translate', { text, targetLanguage, targetLanguageCode });
+export const translateText = async (text, targetLanguage, targetLanguageCode) => {
+  console.log('api.js: translateText started');
+  try {
+    const res = await API.post('/translate', { text, targetLanguage, targetLanguageCode });
+    console.log('api.js: translateText succeeded');
+    return res;
+  } catch (e) {
+    console.error('api.js: translateText then', e);
+    throw e;
+  }
+};
 
 export default API;

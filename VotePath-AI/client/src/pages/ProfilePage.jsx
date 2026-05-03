@@ -30,6 +30,7 @@ export default function ProfilePage() {
   });
 
   const handleSave = async () => {
+    console.log('ProfilePage.jsx: handleSave started');
     if (!form.name || !form.age || !form.state) {
       toast.error('Name, age, and state are required.');
       return;
@@ -43,8 +44,10 @@ export default function ProfilePage() {
       if (data.success) {
         updateUser(data.data.user);
         toast.success('Profile updated successfully! ✅');
+        console.log('ProfilePage.jsx: handleSave succeeded');
       }
     } catch (err) {
+      console.error('ProfilePage.jsx: handleSave then', err);
       toast.error(err.response?.data?.error || 'Failed to update profile.');
     } finally {
       setSaving(false);
@@ -52,8 +55,15 @@ export default function ProfilePage() {
   };
 
   const handleLogout = () => {
-    logoutUser();
-    toast.success('Logged out successfully');
+    console.log('ProfilePage.jsx: handleLogout started');
+    try {
+      logoutUser();
+      toast.success('Logged out successfully');
+      console.log('ProfilePage.jsx: handleLogout succeeded');
+    } catch (e) {
+      console.error('ProfilePage.jsx: handleLogout then', e);
+      toast.error('Error logging out');
+    }
   };
 
   const memberSince = user?.createdAt

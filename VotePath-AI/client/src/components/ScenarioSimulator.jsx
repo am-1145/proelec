@@ -20,22 +20,34 @@ export default function ScenarioSimulator() {
 
   useEffect(() => {
     const fetch = async () => {
+      console.log('ScenarioSimulator.jsx: fetch started');
       try {
         const { data } = await getScenarios();
-        if (data.success) setScenarios(data.data);
-      } catch (e) { console.error(e); }
+        if (data.success) {
+          setScenarios(data.data);
+          console.log('ScenarioSimulator.jsx: fetch succeeded');
+        }
+      } catch (e) {
+        console.error('ScenarioSimulator.jsx: fetch then', e);
+      }
       setFetchingList(false);
     };
     fetch();
   }, []);
 
   const simulate = async (scenarioId) => {
+    console.log('ScenarioSimulator.jsx: simulate started', { scenarioId });
     setSelectedScenario(scenarioId);
     setLoading(true);
     try {
       const { data } = await runScenario(user._id, scenarioId);
-      if (data.success) setResult(data.data);
-    } catch (e) { console.error(e); }
+      if (data.success) {
+        setResult(data.data);
+        console.log('ScenarioSimulator.jsx: simulate succeeded');
+      }
+    } catch (e) {
+      console.error('ScenarioSimulator.jsx: simulate then', e);
+    }
     setLoading(false);
   };
 

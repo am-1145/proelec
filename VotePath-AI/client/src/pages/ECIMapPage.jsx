@@ -72,6 +72,13 @@ const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { st
 const item = { hidden: { opacity: 0, y: 12 }, show: { opacity: 1, y: 0 } };
 
 // Map updater component to change view when state is selected
+/**
+ * MapController Component - Handles map viewport changes when a state is selected.
+ * Uses the flyTo animation to focus on specific coordinates.
+ * @param {Object} props
+ * @param {string} props.selectedState - The name of the currently selected state.
+ * @returns {null}
+ */
 function MapController({ selectedState }) {
   const map = useMap();
   useEffect(() => {
@@ -88,6 +95,12 @@ function MapController({ selectedState }) {
   return null;
 }
 
+/**
+ * ECIMapPage Component - Interactive visualization of Indian electoral data.
+ * Features a Leaflet-based map, state-wise data filtering, and quick links to ECI resources.
+ * Implements high-standard accessibility including live regions and semantic navigation.
+ * @returns {JSX.Element}
+ */
 export default function ECIMapPage() {
   const [selectedState, setSelectedState] = useState(null);
   const [selectedZone, setSelectedZone] = useState('All');
@@ -97,6 +110,10 @@ export default function ECIMapPage() {
   const totalLokSabha = Object.values(STATES_DATA).reduce((sum, s) => sum + s.lokSabha, 0);
   const totalVoters = '96.8 Cr';
 
+  /**
+   * Filters states based on search query and selected zone.
+   * @type {string[]}
+   */
   const filteredStates = allStates.filter(state => {
     const matchesSearch = state.toLowerCase().includes(search.toLowerCase()) ||
       STATES_DATA[state].abbr.toLowerCase().includes(search.toLowerCase());
@@ -104,6 +121,11 @@ export default function ECIMapPage() {
     return matchesSearch && matchesZone;
   });
 
+  /**
+   * Identifies the zone for a given state.
+   * @param {string} state - State name.
+   * @returns {string} Zone name.
+   */
   const getZoneForState = (state) => {
     for (const [zone, states] of Object.entries(ZONES)) {
       if (states.includes(state)) return zone;
@@ -112,11 +134,11 @@ export default function ECIMapPage() {
   };
 
   return (
-    <motion.div variants={container} initial="hidden" animate="show" className="space-y-6">
+    <motion.div variants={container} initial="hidden" animate="show" className="space-y-6" role="main" id="main-content">
       {/* Header */}
-      <motion.div variants={item} className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <header className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-xl bg-bg-elevated flex items-center justify-center shadow-lg shadow-primary/20">
+          <div className="w-11 h-11 rounded-xl bg-bg-elevated flex items-center justify-center shadow-lg shadow-primary/20" aria-hidden="true">
             <span className="text-xl">🌐</span>
           </div>
           <div>
@@ -125,22 +147,33 @@ export default function ECIMapPage() {
           </div>
         </div>
         <a href="https://eci.gov.in" target="_blank" rel="noreferrer"
+          aria-label="Visit the official Election Commission of India portal (External site)"
           className="inline-flex items-center gap-2 text-xs text-primary hover:underline">
-          Visit ECI Portal <FiExternalLink size={12} />
+          Visit ECI Portal <FiExternalLink size={12} aria-hidden="true" />
         </a>
-      </motion.div>
+      </header>
 
       {/* Search & Zone Filter */}
-      <motion.div variants={item} className="flex flex-col sm:flex-row gap-3">
+      <section className="flex flex-col sm:flex-row gap-3" aria-label="Filters">
         <div className="relative flex-1">
-          <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted z-10 pointer-events-none" size={16} />
-          <input type="text" value={search} onChange={e => setSearch(e.target.value)}
+          <label htmlFor="state-search" className="sr-only">Search for a State or UT</label>
+          <FiSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted z-10 pointer-events-none" size={16} aria-hidden="true" />
+          <input 
+            id="state-search"
+            type="text" 
+            value={search} 
+            onChange={e => setSearch(e.target.value)}
             style={{ paddingLeft: '2.75rem' }}
-            className="input-field text-sm w-full" placeholder="Search states or UTs..." />
+            className="input-field text-sm w-full" 
+            placeholder="Search states or UTs..." 
+          />
         </div>
-        <div className="flex gap-2 flex-wrap">
+        <nav className="flex gap-2 flex-wrap" aria-label="Zone filters" role="list">
           {['All', ...Object.keys(ZONES)].map(zone => (
-            <button key={zone} onClick={() => { setSelectedZone(zone); setSelectedState(null); }}
+            <button key={zone} 
+              role="listitem"
+              onClick={() => { setSelectedZone(zone); setSelectedState(null); }}
+              aria-pressed={selectedZone === zone}
               className={`px-3 py-2 rounded-lg text-xs font-medium transition-all border ${selectedZone === zone
                 ? 'bg-primary/15 border-primary/30 text-primary'
                 : 'bg-bg-elevated border-border text-text-muted hover:border-primary/20 hover:text-text-secondary'
@@ -148,8 +181,8 @@ export default function ECIMapPage() {
               {zone === 'All' ? '🌐 All' : zone}
             </button>
           ))}
-        </div>
-      </motion.div>
+        </nav>
+      </section>
 
       {/* States Map + Detail Panel */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -160,6 +193,8 @@ export default function ECIMapPage() {
             zoom={4.5}
             style={{ height: '100%', width: '100%', background: 'var(--color-bg-card)' }}
             zoomControl={true}
+            role="application"
+            aria-label="Interactive map of India's states and electoral regions"
           >
             <TileLayer
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -174,6 +209,7 @@ export default function ECIMapPage() {
                 <Marker
                   key={state}
                   position={data.coords}
+                  alt={`Marker for ${state}`}
                   eventHandlers={{
                     click: () => {
                       setSelectedState(state);
@@ -196,66 +232,72 @@ export default function ECIMapPage() {
         </motion.div>
 
         {/* Detail Panel & Quick Links */}
-        <motion.div variants={item} className="lg:col-span-1 h-full overflow-y-auto pr-2 custom-scrollbar flex flex-col gap-4">
-          <AnimatePresence mode="wait">
-            {selectedState ? (
-              <motion.div key={selectedState}
-                initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
-                className="glass-card p-6 flex-shrink-0">
-                <div className="flex items-center justify-between mb-5">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${ZONE_COLORS[getZoneForState(selectedState)].bg} flex items-center justify-center text-xl`}>
-                      {STATES_DATA[selectedState].isUT ? '🏝️' : '🗺️'}
+        <div className="lg:col-span-1 h-full overflow-y-auto pr-2 custom-scrollbar flex flex-col gap-4">
+          <section aria-live="polite" aria-atomic="true">
+            <AnimatePresence mode="wait">
+              {selectedState ? (
+                <motion.article key={selectedState}
+                  initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
+                  className="glass-card p-6 flex-shrink-0">
+                  <div className="flex items-center justify-between mb-5">
+                    <div className="flex items-center gap-3">
+                      <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${ZONE_COLORS[getZoneForState(selectedState)].bg} flex items-center justify-center text-xl`} aria-hidden="true">
+                        {STATES_DATA[selectedState].isUT ? 'UT' : '🗺️'}
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-text-primary">{selectedState}</h3>
+                        <p className="text-xs text-text-muted">Capital: {STATES_DATA[selectedState].capital}</p>
+                      </div>
                     </div>
-                    <div>
-                      <h3 className="text-lg font-bold text-text-primary">{selectedState}</h3>
-                      <p className="text-xs text-text-muted">Capital: {STATES_DATA[selectedState].capital}</p>
-                    </div>
+                    <button 
+                      onClick={() => setSelectedState(null)} 
+                      aria-label="Close state details"
+                      className="text-text-muted hover:text-text-primary">✕</button>
                   </div>
-                  <button onClick={() => setSelectedState(null)} className="text-text-muted hover:text-text-primary">✕</button>
-                </div>
 
-                <div className="space-y-3">
-                  {[
-                    { label: 'Lok Sabha Seats', value: STATES_DATA[selectedState].lokSabha, icon: '🏛️' },
-                    { label: 'Rajya Sabha Seats', value: STATES_DATA[selectedState].rajyaSabha, icon: '🏢' },
-                    { label: 'Assembly Seats', value: STATES_DATA[selectedState].assemblies || 'N/A', icon: '🏗️' },
-                    { label: 'Total Voters', value: STATES_DATA[selectedState].voters, icon: '🗳️' },
-                    { label: 'Election Phases', value: STATES_DATA[selectedState].phases, icon: '📅' },
-                    { label: 'Zone', value: getZoneForState(selectedState), icon: '🌐' },
-                  ].map((item, i) => (
-                    <div key={i} className="flex items-center justify-between py-2.5 border-b border-border/50 last:border-0">
-                      <span className="text-sm text-text-secondary flex items-center gap-2">
-                        <span className="text-base">{item.icon}</span> {item.label}
-                      </span>
-                      <span className="text-sm font-semibold text-text-primary">{item.value}</span>
-                    </div>
-                  ))}
-                </div>
+                  <div className="space-y-3" role="list">
+                    {[
+                      { label: 'Lok Sabha Seats', value: STATES_DATA[selectedState].lokSabha, icon: '🏛️' },
+                      { label: 'Rajya Sabha Seats', value: STATES_DATA[selectedState].rajyaSabha, icon: '🏢' },
+                      { label: 'Assembly Seats', value: STATES_DATA[selectedState].assemblies || 'N/A', icon: '🏗️' },
+                      { label: 'Total Voters', value: STATES_DATA[selectedState].voters, icon: '🗳️' },
+                      { label: 'Election Phases', value: STATES_DATA[selectedState].phases, icon: '📅' },
+                      { label: 'Zone', value: getZoneForState(selectedState), icon: '🌐' },
+                    ].map((item, i) => (
+                      <div key={i} role="listitem" className="flex items-center justify-between py-2.5 border-b border-border/50 last:border-0">
+                        <span className="text-sm text-text-secondary flex items-center gap-2">
+                          <span className="text-base" aria-hidden="true">{item.icon}</span> {item.label}
+                        </span>
+                        <span className="text-sm font-semibold text-text-primary">{item.value}</span>
+                      </div>
+                    ))}
+                  </div>
 
-                <a href={`https://eci.gov.in/state/${STATES_DATA[selectedState].abbr.toLowerCase()}`}
-                  target="_blank" rel="noreferrer"
-                  className="mt-5 btn-primary w-full text-sm py-2.5 text-center flex items-center justify-center gap-2">
-                  View on ECI <FiExternalLink size={12} />
-                </a>
-              </motion.div>
-            ) : (
-              <motion.div key="empty"
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                className="glass-card-static p-8 text-center flex-shrink-0 flex flex-col items-center justify-center">
-                <span className="text-5xl block mb-4">📍</span>
-                <h3 className="text-base font-semibold text-text-primary mb-2">Select a State on the Map</h3>
-                <p className="text-xs text-text-muted leading-relaxed">
-                  Click on any marker on the map to view detailed electoral information including Lok Sabha seats, Rajya Sabha representation, and voter statistics.
-                </p>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                  <a href={`https://eci.gov.in/state/${STATES_DATA[selectedState].abbr.toLowerCase()}`}
+                    target="_blank" rel="noreferrer"
+                    aria-label={`Open official ECI page for ${selectedState} in a new tab`}
+                    className="mt-5 btn-primary w-full text-sm py-2.5 text-center flex items-center justify-center gap-2">
+                    View on ECI <FiExternalLink size={12} aria-hidden="true" />
+                  </a>
+                </motion.article>
+              ) : (
+                <motion.div key="empty"
+                  initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                  className="glass-card-static p-8 text-center flex-shrink-0 flex flex-col items-center justify-center">
+                  <span className="text-5xl block mb-4" aria-hidden="true">📍</span>
+                  <h3 className="text-base font-semibold text-text-primary mb-2">Select a State on the Map</h3>
+                  <p className="text-xs text-text-muted leading-relaxed">
+                    Click on any marker to view detailed electoral information.
+                  </p>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </section>
 
           {/* Quick Links Section */}
-          <motion.div variants={item} className="glass-card-static p-5 flex-shrink-0">
-            <h3 className="text-lg font-bold text-primary mb-4">Quick Links</h3>
-            <div className="space-y-2">
+          <section className="glass-card-static p-5 flex-shrink-0" aria-labelledby="quick-links-title">
+            <h3 id="quick-links-title" className="text-lg font-bold text-primary mb-4">Quick Links</h3>
+            <nav className="space-y-2" role="list">
               {[
                 { label: 'Voter Registration Portal', icon: '📋', url: 'https://voters.eci.gov.in/' },
                 { label: 'Find Your Booth', icon: '🔍', url: 'https://electoralsearch.eci.gov.in/' },
@@ -263,32 +305,35 @@ export default function ECIMapPage() {
                 { label: 'Election Results', icon: '📊', url: 'https://results.eci.gov.in/' },
                 { label: 'Candidate Affidavits', icon: '📄', url: 'https://affidavit.eci.gov.in/' },
               ].map((link, i) => (
-                <a key={i} href={link.url} target="_blank" rel="noreferrer" className="block w-full text-left px-4 py-3 rounded-xl bg-bg-elevated border border-border/50 hover:border-primary/30 hover:bg-primary/5 transition-all flex items-center gap-3">
-                  <span className="text-base">{link.icon}</span>
+                <a key={i} href={link.url} target="_blank" rel="noreferrer" 
+                  role="listitem"
+                  aria-label={`Open ${link.label} in a new tab`}
+                  className="block w-full text-left px-4 py-3 rounded-xl bg-bg-elevated border border-border/50 hover:border-primary/30 hover:bg-primary/5 transition-all flex items-center gap-3">
+                  <span className="text-base" aria-hidden="true">{link.icon}</span>
                   <span className="text-sm text-text-secondary font-medium">{link.label}</span>
-                  <FiExternalLink className="ml-auto text-text-muted" size={14} />
+                  <FiExternalLink className="ml-auto text-text-muted" size={14} aria-hidden="true" />
                 </a>
               ))}
-            </div>
-          </motion.div>
-        </motion.div>
+            </nav>
+          </section>
+        </div>
       </div>
 
       {/* Zone Legend */}
-      <motion.div variants={item} className="glass-card-static p-4">
-        <h3 className="text-sm font-semibold text-text-secondary mb-3">Zone Legend</h3>
-        <div className="flex flex-wrap gap-4">
+      <section className="glass-card-static p-4" aria-labelledby="legend-title">
+        <h3 id="legend-title" className="text-sm font-semibold text-text-secondary mb-3">Zone Legend</h3>
+        <div className="flex flex-wrap gap-4" role="list">
           {Object.entries(ZONE_COLORS).map(([zone, colors]) => (
-            <div key={zone} className="flex items-center gap-2">
-              <div className={`w-3 h-3 rounded-full ${colors.dot}`} />
+            <div key={zone} role="listitem" className="flex items-center gap-2">
+              <div className={`w-3 h-3 rounded-full ${colors.dot}`} aria-hidden="true" />
               <span className="text-xs text-text-muted">{zone} ({ZONES[zone].length})</span>
             </div>
           ))}
         </div>
-      </motion.div>
+      </section>
 
       {/* Summary Cards — Bottom */}
-      <motion.div variants={item} className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <footer className="grid grid-cols-2 lg:grid-cols-4 gap-3" aria-label="Electoral summary statistics">
         {[
           { label: 'States & UTs', value: '36', icon: '🗺️', color: 'text-primary' },
           { label: 'Lok Sabha Seats', value: totalLokSabha.toString(), icon: '🏛️', color: 'text-primary' },
@@ -296,21 +341,26 @@ export default function ECIMapPage() {
           { label: 'ECI Helpline', value: '1950', icon: '📞', color: 'text-secondary', isCall: true },
         ].map((card, i) => (
           card.isCall ? (
-            <a key={i} href="tel:1950" className="glass-card-static p-4 text-center hover:border-primary/30 transition-all">
-              <span className="text-2xl block mb-1">{card.icon}</span>
+            <a key={i} href="tel:1950" 
+              aria-label={`Call official ECI Helpline at ${card.value}`}
+              className="glass-card-static p-4 text-center hover:border-primary/30 transition-all">
+              <span className="text-2xl block mb-1" aria-hidden="true">{card.icon}</span>
               <p className={`text-lg font-bold ${card.color}`}>{card.value}</p>
               <p className="text-[10px] text-text-muted mt-0.5">{card.label}</p>
               <p className="text-[9px] text-primary mt-1">Tap to Call</p>
             </a>
           ) : (
             <div key={i} className="glass-card-static p-4 text-center">
-              <span className="text-2xl block mb-1">{card.icon}</span>
+              <span className="text-2xl block mb-1" aria-hidden="true">{card.icon}</span>
               <p className={`text-lg font-bold ${card.color}`}>{card.value}</p>
               <p className="text-[10px] text-text-muted mt-0.5">{card.label}</p>
             </div>
           )
         ))}
-      </motion.div>
+      </footer>
+    </motion.div>
+  );
+}
     </motion.div>
   );
 }

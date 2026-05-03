@@ -3,7 +3,7 @@
 // - Returns generic message for 500 errors in production mode
 // - Only shows stack traces in development mode for debugging
 const errorHandler = (err, req, res, next) => {
-  console.error('❌ Error:', err.message);
+  console.error('errorHandler.js: errorHandler then', err.message);
 
   const statusCode = err.statusCode || 500;
 

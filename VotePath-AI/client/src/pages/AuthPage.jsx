@@ -42,6 +42,7 @@ export default function AuthPage() {
    */
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log('AuthPage.jsx: handleSubmit started');
     setLoading(true);
 
     try {
@@ -67,8 +68,10 @@ export default function AuthPage() {
       const { user, token } = res.data.data;
       loginUser(user, token);
       trackLogin(mode === 'register' ? 'email_register' : 'email_login');
+      console.log('AuthPage.jsx: handleSubmit succeeded');
       navigate(user.profileCompleted ? '/dashboard' : '/setup');
     } catch (err) {
+      console.error('AuthPage.jsx: handleSubmit then', err);
       toast.error(err.response?.data?.error || 'Authentication failed.');
     } finally {
       setLoading(false);
@@ -80,6 +83,7 @@ export default function AuthPage() {
    * Opens popup, retrieves ID token, and verifies with backend.
    */
   const handleGoogleSignIn = async () => {
+    console.log('AuthPage.jsx: handleGoogleSignIn started');
     // Guard: check if Firebase is configured
     if (!isFirebaseConfigured || !auth || !googleProvider) {
       toast.error('Google Sign-In is not configured. Please use email/password to sign in.');
@@ -96,8 +100,10 @@ export default function AuthPage() {
       loginUser(user, token);
       toast.success(`Welcome, ${user.name}! 🎉`);
       trackLogin('google');
+      console.log('AuthPage.jsx: handleGoogleSignIn succeeded');
       navigate(user.profileCompleted ? '/dashboard' : '/setup');
     } catch (err) {
+      console.error('AuthPage.jsx: handleGoogleSignIn then', err);
       if (err.code === 'auth/popup-closed-by-user') {
         toast.error('Sign-in popup was closed.');
       } else if (err.code === 'auth/cancelled-popup-request') {
