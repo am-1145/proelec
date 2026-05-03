@@ -4,6 +4,4 @@ dist
 .env.local
 .env.production
 .gitignore
-Dockerfile
-nginx.conf
 README.md
