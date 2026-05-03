@@ -183,27 +183,6 @@ export default function BoothAssistant() {
           )}
         </AnimatePresence>
       </section>
-
-      {/* Empty state */}
-      {!guide && !loading && (
-        <div className="text-center py-8" aria-hidden="true">
-          <span className="text-4xl block mb-3">📍</span>
-          <p className="text-sm text-text-muted">Enter your pincode above to get booth details</p>
-          <p className="text-xs text-text-muted mt-1">We'll show you steps, documents needed, and booth etiquette</p>
-        </div>
-      )}
-    </div>
-  );
-}
-
-      {/* Empty state */}
-      {!guide && !loading && (
-        <div className="text-center py-8">
-          <span className="text-4xl block mb-3">📍</span>
-          <p className="text-sm text-text-muted">Enter your pincode above to get booth details</p>
-          <p className="text-xs text-text-muted mt-1">We'll show you steps, documents needed, and booth etiquette</p>
-        </div>
-      )}
     </div>
   );
 }

@@ -355,6 +355,3 @@ export default function ParliamentPage() {
     </motion.div>
   );
 }
-    </motion.div>
-  );
-}

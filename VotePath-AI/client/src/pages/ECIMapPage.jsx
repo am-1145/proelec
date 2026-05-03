@@ -361,6 +361,3 @@ export default function ECIMapPage() {
     </motion.div>
   );
 }
-    </motion.div>
-  );
-}
